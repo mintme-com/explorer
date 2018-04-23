@@ -1,0 +1,13 @@
+{
+    "gethPort": 39573,
+    "blocks": [ {"start": 2000000, "end": "latest"}],
+    "quiet": false,
+    "terminateAtExistingDB": false,
+    "listenOnly": false,
+    "settings": {
+        "symbol": "WEB",
+        "name": "Webchain",
+        "title": "Webchain Block Explorer",
+        "author": "Webchain project"
+    }
+}
