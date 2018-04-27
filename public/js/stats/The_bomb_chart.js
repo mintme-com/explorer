@@ -14,10 +14,13 @@ window.call_hashrate_chart = function(){
     ], function (err, result) {
         // result now equals 'done'
         //console.log("all done1");
+
         return result;
     });
 
     function myFirstFunction(callback) {
+
+
         request('http://drawpie.com/etc_hash_rate_api', function (error, response, body) {
             if (!error && response.statusCode == 200) {
 
@@ -26,10 +29,33 @@ window.call_hashrate_chart = function(){
                 callback(null, hashrate, 'two');
             }
         });
+
+
+
         //callback(null, 'one', 'two');
     }
     function mySecondFunction(arg1, arg2, callback) {
         // arg1 now equals 'one' and arg2 now equals 'two'
+
+        //console.log(112);
+        //console.log(arg1);
+        var day = moment("2016-08-10");
+
+        var bomb_array =[];
+        for(i=2000000;i<4500000;i = i +50000){
+            console.log(i);
+            //Math.pow(2, (block_number/100000)-2);
+            console.log(Math.pow(2, (i/100000)-2));
+
+            //bomb_array.push({Date :day.unix(), Value : Math.pow(2, (i/100000000000)-2) +  10677580591563});
+            bomb_array.push({Date :day.unix(), Value : Math.pow(2, (i/100000)-2)+8000000000000});
+
+            day.add(14*50000, 's');
+            //console.log(day.format())
+        }
+
+        //console.log(bomb_array);
+
 
         //console.log(window.screen.availWidth);
         var width1 = parseInt(d3.select("#hashrate").style("width"));
@@ -54,9 +80,7 @@ window.call_hashrate_chart = function(){
             .orient("bottom")
             //.tickFormat(d3.time.format("%x %H:%M"))
             .tickFormat(d3.time.format("%x"))
-            .ticks(5);
-
-
+            .ticks(8);
 
 
         var yAxis = d3.svg.axis()
@@ -67,15 +91,20 @@ window.call_hashrate_chart = function(){
             .ticks(5);
 
 
-
         var area = d3.svg.area()
             .x(function(d) { return x(d.timestamp*1000); })
             .y0(height)
-            .y1(function(d) { return y(d.instantHashrate); });
+            .y1(function(d) { return y(d.difficulty); });
 
         var valueline = d3.svg.line()
             .x(function(d) { return x(d.timestamp*1000); })
-            .y(function(d) { return y(d.instantHashrate); });
+            .y(function(d) { return y(d.difficulty); });
+
+        /*
+         var valueline_bomb = d3.svg.line()
+         .x(function(d) { return x(d.Date*1000); })
+         .y(function(d) { return y(d.Value); });
+         */
 
         var svg = d3.select("#hashrate")
         //.append("svg")
@@ -111,8 +140,9 @@ window.call_hashrate_chart = function(){
         var data = arg1.etc_hashrate;
 
         // Scale the range of the data
-        x.domain(d3.extent(data, function(d) { return d.timestamp*1000; }));
-        y.domain([d3.min(data, function(d) { return d.instantHashrate; }), d3.max(data, function(d) { return d.instantHashrate; })]);
+        //x.domain(d3.extent(data, function(d) { return d.timestamp*1000; }));
+        x.domain([1470009600*1000,1504224000*1000]);
+        y.domain([d3.min(data, function(d) { return d.difficulty; }), d3.max(data, function(d) { return d.difficulty; })]);
 
         // Add the filled area
         svg.append("path")
@@ -140,6 +170,24 @@ window.call_hashrate_chart = function(){
         // Add the valueline path.
         svg.append("path")
             .attr("d", valueline(data));
+
+        svg.selectAll("circle")
+            .data(bomb_array)
+            .enter()
+            .append("circle")
+            .attr("cx", function (d) { return x(new Date(d.Date*1000)) })
+            .attr("cy", function (d) { return y(d.Value); })
+            .attr("r", function (d) { return 3; })
+            .style("fill", function(d) {
+                if(d.Value < 8250000000000){
+                    return "black";
+                }
+                else{
+                    return "red";
+                }
+
+
+            });
 
         // Add the X Axis
         svg.append("g")
@@ -192,7 +240,7 @@ window.call_hashrate_chart = function(){
 
 
             //focus.attr("transform", "translate(" + x(d.date) + "," + y(d.close) + ")");
-            focus.attr("transform", "translate(" + x(moment(x0).unix()*1000) + "," + y(s1.instantHashrate) + ")");
+            focus.attr("transform", "translate(" + x(moment(x0).unix()*1000) + "," + y(s1.difficulty) + ")");
         }
 
 

@@ -15,8 +15,8 @@ angular.module('BlocksApp').controller('HomeController', function($rootScope, $s
         url: URL,
         data: {"action": "latest_blocks"}
       }).success(function(data) {
-        $scope.blockLoading = false;
         $scope.latest_blocks = data.blocks;
+        $scope.blockLoading = false;
       });
     }
     $scope.reloadTransactions = function() {
@@ -43,14 +43,15 @@ angular.module('BlocksApp').controller('HomeController', function($rootScope, $s
     scope: true,
     link: function(scope, elem, attrs){
       scope.stats = {};
-      var statsURL = "/stats";
+      var statsURL = "/web3relay";
       $http.post(statsURL, {"action": "hashrate"})
        .then(function(res){
           scope.stats.hashrate = res.data.hashrate;
           scope.stats.difficulty = res.data.difficulty;
           scope.stats.blockHeight = res.data.blockHeight;
           scope.stats.blockTime = res.data.blockTime;
-        });
+          //console.log(res);
+	});
       }
   }
 })

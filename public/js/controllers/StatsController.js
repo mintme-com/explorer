@@ -2,9 +2,9 @@ angular.module('BlocksApp').controller('StatsController', function($stateParams,
 
     $rootScope.isHome = false;
     $scope.settings = $rootScope.setup;
-  
+
     /*
-      Chart types: 
+      Chart types:
         etc_hashrate: WEB Hashrate Growth
         miner_hashrate: Miner Hashrate Distribution
     */
