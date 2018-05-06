@@ -44,10 +44,28 @@ var getAddr = function(req, res){
   var limit = parseInt(req.body.length);
   var start = parseInt(req.body.start);
 
-  var data = { draw: parseInt(req.body.draw), recordsFiltered: count, recordsTotal: count };
+  var data = { draw: parseInt(req.body.draw), recordsFiltered: count, recordsTotal: count, mined: 0 };
 
   var addrFind = Transaction.find( { $or: [{"to": addr}, {"from": addr}] })  
 
+  Transaction.aggregate([
+    {$match: { $or: [{"to": addr}, {"from": addr}] }},
+    {$group: { _id: null, count: { $sum: 1 } }}
+  ]).exec(function(err, results) {
+    if (!err && results && results.length > 0) {
+      // fix recordsTotal
+      data.recordsTotal = results[0].count;
+      data.recordsFiltered = results[0].count;
+    }
+  });
+
+  Block.aggregate([
+    { $match: { "miner": addr } },
+    { $group: { _id: '$miner', count: { $sum: 1 } }
+  }]).exec(function(err, results) {
+    if (!err && results && results.length > 0) {
+      data.mined = results[0].count;
+    }
   addrFind.lean(true).sort('-blockNumber').skip(start).limit(limit)
           .exec("find", function (err, docs) {
             if (docs)
@@ -57,6 +75,7 @@ var getAddr = function(req, res){
             res.write(JSON.stringify(data));
             res.end();
           });
+  });
 
 };
 var getBlock = function(req, res) {
@@ -137,11 +156,34 @@ var getLatest = function(lim, res, callback) {
 
 /* get blocks from db */
 var sendBlocks = function(lim, res) {
-  var blockFind = Block.find({}, "number transactions timestamp miner extraData")
+  var blockFind = Block.find({}, "number timestamp miner extraData")
                       .lean(true).sort('-number').limit(lim);
   blockFind.exec(function (err, docs) {
-    res.write(JSON.stringify({"blocks": filters.filterBlocks(docs)}));
-    res.end();
+    if(!err && docs) {
+      var blockNumber = docs[docs.length - 1].number;
+      // aggregate transaction counters
+      Transaction.aggregate([
+        {$match: { blockNumber: { $gte: blockNumber } }},
+        {$group: { _id: '$blockNumber', count: { $sum: 1 } }}
+      ]).exec(function(err, results) {
+        var txns = {};
+        if (!err && results) {
+          // set transaction counters
+          results.forEach(function(txn) {
+            txns[txn._id] = txn.count;
+          });
+          docs.forEach(function(doc) {
+            doc.txn = txns[doc.number] || 0;
+          });
+        }
+        res.write(JSON.stringify({"blocks": filters.filterBlocks(docs)}));
+        res.end();
+      });
+    } else {
+      console.log("blockFind error:" + err);
+      res.write(JSON.stringify({"error": true}));
+      res.end();
+    }
   });
 }
 
@@ -159,4 +201,3 @@ const DATA_ACTIONS = {
   "latest_blocks": sendBlocks,
   "latest_txs": sendTxs
 }
-
