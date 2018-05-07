@@ -1,6 +1,6 @@
 {
     "nodeAddr":     "localhost",
-    "gethPort":     8545,
+    "gethPort":     39573,
     "startBlock":   0,
     "quiet":        true,
     "syncAll":      true,
