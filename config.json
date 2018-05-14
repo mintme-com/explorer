@@ -2,14 +2,21 @@
     "nodeAddr":     "localhost",
     "gethPort":     39573,
     "startBlock":   0,
-    "quiet":        true,
+    "quiet":        false,
     "syncAll":      true,
     "patch":        true,
     "patchBlocks":  100,
     "settings": {
-        "symbol": "ETC",
-        "name": "Ethereum Classic",
-        "title": "Ethereum Classic Block Explorer",
-        "author": "Elaine"
+        "symbol": "WEB",
+        "name": "Webchain",
+        "title": "Webchain Block Explorer",
+        "author": "Webchain project",
+        "contact": "mailto:support@webchain.network",
+        "about": "This is an open source Webchain Explorer.",
+        "twitter": "https://twitter.com/TheWebchain",
+        "github": "https://github.com/webchain-network",
+        "logo": "/img/explorer-logo.png",
+        "customCss": "green-haze.min.css",
+        "copyright": "2018 &copy; Webchain explorer."
     }
 }

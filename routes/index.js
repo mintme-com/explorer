@@ -16,9 +16,9 @@ module.exports = function(app){
   var fiat = require('./fiat');
   var stats = require('./stats');
 
-  /* 
+  /*
     Local DB: data request format
-    { "address": "0x1234blah", "txin": true } 
+    { "address": "0x1234blah", "txin": true }
     { "tx": "0x1234blah" }
     { "block": "1234" }
   */
@@ -28,7 +28,7 @@ module.exports = function(app){
   app.post('/data', getData);
 
   app.post('/daorelay', DAO);
-  app.post('/tokenrelay', Token);  
+  app.post('/tokenrelay', Token);
   app.post('/web3relay', web3relay.data);
   app.post('/compile', compile);
 
@@ -46,7 +46,17 @@ var getAddr = function(req, res){
 
   var data = { draw: parseInt(req.body.draw), recordsFiltered: count, recordsTotal: count, mined: 0 };
 
-  var addrFind = Transaction.find( { $or: [{"to": addr}, {"from": addr}] })  
+  var addrFind = Transaction.find( { $or: [{"to": addr}, {"from": addr}] })
+
+  var sortOrder = '-blockNumber';
+  if (req.body.order && req.body.order[0] && req.body.order[0].column) {
+    // date or blockNumber column
+    if (req.body.order[0].column == 1 || req.body.order[0].column == 6) {
+      if (req.body.order[0].dir == 'asc') {
+        sortOrder = 'blockNumber';
+      }
+    }
+  }
 
   Transaction.aggregate([
     {$match: { $or: [{"to": addr}, {"from": addr}] }},
@@ -66,11 +76,11 @@ var getAddr = function(req, res){
     if (!err && results && results.length > 0) {
       data.mined = results[0].count;
     }
-  addrFind.lean(true).sort('-blockNumber').skip(start).limit(limit)
+  addrFind.lean(true).sort(sortOrder).skip(start).limit(limit)
           .exec("find", function (err, docs) {
             if (docs)
-              data.data = filters.filterTX(docs, addr);      
-            else 
+              data.data = filters.filterTX(docs, addr);
+            else
               data.data = [];
             res.write(JSON.stringify(data));
             res.end();
@@ -125,15 +135,15 @@ var getData = function(req, res){
     if (isNaN(limit))
       var lim = MAX_ENTRIES;
     else
-      var lim = parseInt(limit);  
+      var lim = parseInt(limit);
     DATA_ACTIONS[action](lim, res);
-  } else { 
+  } else {
     console.error("Invalid Request: " + action)
     res.status(400).send();
   }
 };
 
-/* 
+/*
   temporary blockstats here
 */
 var latestBlock = function(req, res) {
@@ -143,7 +153,7 @@ var latestBlock = function(req, res) {
     res.write(JSON.stringify(doc));
     res.end();
   });
-} 
+}
 
 
 var getLatest = function(lim, res, callback) {
