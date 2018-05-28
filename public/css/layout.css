@@ -81,12 +81,11 @@
     float: left;
     display: block;
     width: 255px;
-    height: 75px;
-    position: absolute;
+    height: 100px;
 }
 
 .page-header .page-header-top .top-menu {
-    margin: 13px 0 0;
+    margin: 15px 0 0;
     padding: 0;
     float: right;
 }
