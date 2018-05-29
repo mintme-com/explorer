@@ -6,6 +6,7 @@
     "syncAll":      true,
     "patch":        true,
     "patchBlocks":  100,
+    "bulkSize":     100,
     "settings": {
         "symbol": "WEB",
         "name": "Webchain",
@@ -17,6 +18,8 @@
         "github": "https://github.com/webchain-network",
         "logo": "/img/explorer-logo.png",
         "customCss": "green-haze.min.css",
-        "copyright": "2018 &copy; Webchain explorer."
+        "copyright": "2018 &copy; Webchain explorer.",
+        "miners": {
+         }
     }
 }
