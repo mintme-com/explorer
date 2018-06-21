@@ -4,8 +4,8 @@
         <div class="row">
             <div class="col-md-3 col-sm-6 col-xs-12 footer-block">
                 <h2>About</h2>
-                <p> This is an open source Webchain Explorer. </p>
-                <p> Powered by <a href="https://github.com/webchain-network/explorer" target="_blank">Webchain explorer</a> </p>
+                <p> {{settings.about}} </p>
+                <span ng-bind-html="settings.poweredbyCustom" ng-if="settings.poweredbyCustom">{{settings.poweredbyCustom}}</span>
             </div>
             <div class="col-md-3 col-sm-6 col-xs-12 footer-block">
                 <h2>Follow Us On</h2>
