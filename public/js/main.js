@@ -230,6 +230,31 @@ BlocksApp.config(['$stateProvider', '$urlRouterProvider', function($stateProvide
                 }]
             }
         })
+        .state('richlist', {
+            url: "/richlist",
+            templateUrl: "views/richlist.html",
+            data: {pageTitle: 'Rich list'},
+            controller: "RichController",
+            resolve: {
+                deps: ['$ocLazyLoad', '$stateParams', function($ocLazyLoad, $stateParams) {
+                    return $ocLazyLoad.load({
+                        insertBefore: '#ng_load_plugins_before', // load the above css files before '#ng_load_plugins_before'
+                        files: [
+                             '/views/richlist.js',
+                             '/js/controllers/RichController.js',
+                             '/css/stats.css',
+                             "https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.10/d3.js",
+                             "/plugins/async.min.js",
+                             "/plugins/moment/moment.min.js",
+                             '/plugins/datatables/datatables.min.css',
+                             '/plugins/datatables/datatables.bootstrap.css',
+                             '/plugins/datatables/datatables.all.min.js',
+                             '/plugins/datatables/datatable.min.js'
+                        ]
+                    });
+                }]
+            }
+        })
         .state('tokenlist', {
             url: "/token",
             templateUrl: "views/tokenlist.html",
