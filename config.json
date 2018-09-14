@@ -11,6 +11,7 @@
         "symbol": "WEB",
         "name": "Webchain",
         "title": "Webchain Block Explorer",
+        "description": "Webchain Block Explorer allows you to search through the blockchain. Enter a wallet address, transaction hash, block hash or block number.",
         "author": "Webchain project",
         "contact": "mailto:support@webchain.network",
         "about": "This is an open source Webchain Explorer.",
