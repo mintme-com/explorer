@@ -10,7 +10,6 @@
     "settings": {
         "symbol": "WEB",
         "name": "Webchain",
-        "title": "Webchain Block Explorer",
         "description": "Webchain Block Explorer allows you to search through the blockchain. Enter a wallet address, transaction hash, block hash or block number.",
         "keywords": "Block Height, Block Time, Network Hashrate, Difficulty, Transaction hash, Block Explorer, block number, block hash, wallet address",
         "author": "Webchain project",
