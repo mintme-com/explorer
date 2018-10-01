@@ -183,7 +183,7 @@ var sendBlocks = function(lim, res) {
   var blockFind = Block.find({}, "number timestamp miner extraData")
                       .lean(true).sort('-number').limit(lim);
   blockFind.exec(function (err, docs) {
-    if(!err && docs) {
+    if(!err && docs && docs.length > 0) {
       var blockNumber = docs[docs.length - 1].number;
       // aggregate transaction counters
       Transaction.aggregate([
