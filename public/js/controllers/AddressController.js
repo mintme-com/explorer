@@ -42,12 +42,73 @@ angular.module('BlocksApp').controller('AddressController', function($stateParam
           data.addr = $scope.addrHash;
           data.count = $scope.addr.count;
           $http.post('/addr', data).then(function(resp) {
+          $('label input').on('keyup', function () {
+              resp.data.keyword = $('label input').val();
+          });
+          var search = $('label input').val() ? $('label input').val() : null;
+          var clone = {
+              draw: 0,
+              recordsFiltered: 0,
+              recordsTotal: 0,
+              mined: 0,
+              data: [[],[],[],[],[],[],[],[],[],[]]
+          };
+          clone.draw = resp.data.draw;
+          clone.recordsFiltered = resp.data.recordsFiltered;
+          clone.recordsTotal = resp.data.recordsTotal;
+          clone.mined = resp.data.mined;
+          clone.data = resp.data.data;
+          var clearItem = 0;
+          if (search != null) {
+              for (var iI = 0; iI < clone.data.length; iI++) {
+                  var arrayItem = [];
+                  var vDeleteBlockAndDate = 0;
+                  arrayItem = clone.data[iI];
+                  for (var iJ = 0; iJ < 7; iJ++) {
+                      if (iJ == 1) {
+                          var strRet = new String;
+                          var iRet = 0;
+                          strRet = arrayItem[iJ].toString();
+                          iRet = strRet.indexOf(search);
+                          if (iRet > -1) {
+                              clearItem++;
+                          }
+                          else {
+                              vDeleteBlockAndDate++;
+                          }
+                      }
+                      if (iJ == 6) {
+                          var strRet = new String;
+                          var iRet = 0;
+                          strRet = getDuration(arrayItem[iJ]).toString();
+                          iRet = strRet.indexOf(search);
+                          if (iRet > -1) {
+                              clearItem++;
+                          }
+                          else {
+                              vDeleteBlockAndDate++;
+                          }
+                      }
+                  }
+                  if (vDeleteBlockAndDate == 2) {
+                      clone.data.splice(iI,1);
+                      iI = -1;
+                  }
+              }
+          }
+          if (clearItem == 0 && search != null) {
+              clone.data = [];
+          }
             // save data
-            $scope.data = resp.data;
+            //$scope.data = resp.data;
+            $scope.data = clone;
             // check $scope.records* if available.
-            resp.data.recordsTotal = $scope.recordsTotal ? $scope.recordsTotal : resp.data.recordsTotal;
-            resp.data.recordsFiltered = $scope.recordsFiltered ? $scope.recordsFiltered : resp.data.recordsFiltered;
-            callback(resp.data);
+            //resp.data.recordsTotal = $scope.recordsTotal ? $scope.recordsTotal : resp.data.recordsTotal;
+            //resp.data.recordsFiltered = $scope.recordsFiltered ? $scope.recordsFiltered : resp.data.recordsFiltered;
+            //callback(resp.data);
+            resp.data.recordsTotal = $scope.recordsTotal ? $scope.recordsTotal : clone.recordsTotal;
+            resp.data.recordsFiltered = $scope.recordsFiltered ? $scope.recordsFiltered : clone.recordsFiltered;
+            callback(clone);
           });
 
           // get mined, recordsTotal counter only once.
