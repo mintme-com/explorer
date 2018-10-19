@@ -39,76 +39,81 @@ angular.module('BlocksApp').controller('AddressController', function($stateParam
         serverSide: true,
         paging: true,
         ajax: function(data, callback, settings) {
-          data.addr = $scope.addrHash;
-          data.count = $scope.addr.count;
-          $http.post('/addr', data).then(function(resp) {
-          $('label input').on('keyup', function () {
-              resp.data.keyword = $('label input').val();
-          });
-          var search = $('label input').val() ? $('label input').val() : null;
-          var clone = {
-              draw: 0,
-              recordsFiltered: 0,
-              recordsTotal: 0,
-              mined: 0,
-              data: [[],[],[],[],[],[],[],[],[],[]]
-          };
-          clone.draw = resp.data.draw;
-          clone.recordsFiltered = resp.data.recordsFiltered;
-          clone.recordsTotal = resp.data.recordsTotal;
-          clone.mined = resp.data.mined;
-          clone.data = resp.data.data;
-          var clearItem = 0;
-          if (search != null) {
-              for (var iI = 0; iI < clone.data.length; iI++) {
-                  var arrayItem = [];
-                  var vDeleteBlockAndDate = 0;
-                  arrayItem = clone.data[iI];
-                  for (var iJ = 0; iJ < 7; iJ++) {
-                      if (iJ == 1) {
-                          var strRet = new String;
-                          var iRet = 0;
-                          strRet = arrayItem[iJ].toString();
-                          iRet = strRet.indexOf(search);
-                          if (iRet > -1) {
-                              clearItem++;
-                          }
-                          else {
-                              vDeleteBlockAndDate++;
-                          }
-                      }
-                      if (iJ == 6) {
-                          var strRet = new String;
-                          var iRet = 0;
-                          strRet = getDuration(arrayItem[iJ]).toString();
-                          iRet = strRet.indexOf(search);
-                          if (iRet > -1) {
-                              clearItem++;
-                          }
-                          else {
-                              vDeleteBlockAndDate++;
-                          }
-                      }
-                  }
-                  if (vDeleteBlockAndDate == 2) {
-                      clone.data.splice(iI,1);
-                      iI = -1;
-                  }
-              }
-          }
-          if (clearItem == 0 && search != null) {
-              clone.data = [];
-          }
+            data.addr = $scope.addrHash;
+            data.count = $scope.addr.count;
+            $http.post('/addr', data).then(function(resp) {
+            $('label input').on('keyup', function () {
+                resp.data.keyword = $('label').find('input').val();
+            });
+            var $Search = $('label').find('input').val() || null;
+            var structDataFiltered = {
+                draw: 0,
+                recordsFiltered: 0,
+                recordsTotal: 0,
+                mined: 0,
+                data: [[],[],[],[],[],[],[],[],[],[]]
+            };
+            var vClearItemFlag = 0;
+            var vDeleteBlockAndDateFlag = 0;
+            var vReturn = 0;
+            var vItemIndex = 0;
+            var vColumn = 0;
+            var vDataLength = 0;
+            var strReturn = new String;
+            vClearItemFlag = 0;
+            structDataFiltered.draw = resp.data.draw;
+            structDataFiltered.recordsFiltered = resp.data.recordsFiltered;
+            structDataFiltered.recordsTotal = resp.data.recordsTotal;
+            structDataFiltered.mined = resp.data.mined;
+            structDataFiltered.data = resp.data.data;
+            vDataLength = structDataFiltered.data.length;
+            if ($Search !== null) {
+                for (vItemIndex = 0; vItemIndex < vDataLength; vItemIndex++) {
+                    vDeleteBlockAndDateFlag = 0;
+                    var vArrayItem = [];
+                    vArrayItem = structDataFiltered.data[vItemIndex];
+                    for (vColumn = 0; vColumn < 7; vColumn++) {
+                        switch (vColumn) {
+                        case 1:
+                            strReturn = vArrayItem[vColumn].toString();
+                            if (strReturn.indexOf($Search) > -1) {
+                                vClearItemFlag++;
+                            }
+                            else {
+                                vDeleteBlockAndDateFlag++;
+                            }
+                            break;
+                        case 6:
+                            strReturn = getDuration(vArrayItem[vColumn]).toString();
+                            if (strReturn.indexOf($Search) > -1) {
+                                vClearItemFlag++;
+                            }
+                            else {
+                                vDeleteBlockAndDateFlag++;
+                            }    
+                            break;
+                        }
+                    }
+                    if (vDeleteBlockAndDateFlag === 2) {
+                        structDataFiltered.data.splice(vItemIndex,1);
+                        vDataLength = structDataFiltered.data.length;
+                        vItemIndex = -1;
+                    }
+                }
+            }
+            if (vClearItemFlag === 0 && $Search !== null) {
+                structDataFiltered.data = [];
+            }
             // save data
             //$scope.data = resp.data;
-            $scope.data = clone;
+            $scope.data = structDataFiltered;
             // check $scope.records* if available.
             //resp.data.recordsTotal = $scope.recordsTotal ? $scope.recordsTotal : resp.data.recordsTotal;
             //resp.data.recordsFiltered = $scope.recordsFiltered ? $scope.recordsFiltered : resp.data.recordsFiltered;
             //callback(resp.data);
-            resp.data.recordsTotal = $scope.recordsTotal ? $scope.recordsTotal : clone.recordsTotal;
-            resp.data.recordsFiltered = $scope.recordsFiltered ? $scope.recordsFiltered : clone.recordsFiltered;
-            callback(clone);
+            resp.data.recordsTotal = $scope.recordsTotal ? $scope.recordsTotal : structDataFiltered.recordsTotal;
+            resp.data.recordsFiltered = $scope.recordsFiltered ? $scope.recordsFiltered : structDataFiltered.recordsFiltered;
+            callback(structDataFiltered);
           });
 
           // get mined, recordsTotal counter only once.
