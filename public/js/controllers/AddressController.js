@@ -72,7 +72,7 @@ angular.module('BlocksApp').controller('AddressController', function($stateParam
                     vDeleteBlockAndDateFlag = 0;
                     var vArrayItem = [];
                     vArrayItem = structDataFiltered.data[vItemIndex];
-                    for (vColumn = 0; vColumn < 7; vColumn++) {
+                    for (vColumn = 0; vColumn < vArrayItem.length; vColumn++) {
                         switch (vColumn) {
                         case 1:
                             strReturn = vArrayItem[vColumn].toString();
