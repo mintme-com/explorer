@@ -6,6 +6,8 @@
                 <h2>About</h2>
                 <p> {{settings.about}} </p>
                 <span ng-bind-html="settings.poweredbyCustom" ng-if="settings.poweredbyCustom">{{settings.poweredbyCustom}}</span>
+                <span ng-if="!settings.poweredbyCustom && settings.poweredbyEtcImage"><a href="https://github.com/ethereumclassic/explorer" target="_blank"><img height="51px" src="{{settings.poweredbyEtcImage}}"></a></span>
+                <p ng-if="!settings.poweredbyCustom && !settings.poweredbyEtcImage && settings.poweredbyEtc"> Powered by <a href="https://github.com/ethereumclassic/explorer" target="_blank">ETC Explorer</a> </p>
             </div>
             <div class="col-md-3 col-sm-6 col-xs-12 footer-block">
                 <h2>Follow Us On</h2>
@@ -38,6 +40,14 @@
                         <a ng-show="settings.qq" href="{{settings.qq}}" data-original-title="qq" class="qq"></a>
                     </li>
                 </ul>
+            </div>
+            <div ng-show="settings.symbol == 'ETC'" class="col-md-6 col-sm-12 col-xs-12 footer-block">
+                <h2>Help, it's Broken!</h2>
+                <address class="margin-bottom-40"> 
+                    <br>Open an Issue: <a href="https://github.com/ethereumclassic/explorer/issues">github</a>
+                    <br> <a href="mailto:elaine.ou@gmail.com">Email bug reports</a>
+                    <br> <a href="https://twitter.com/eiaine">Twit</a>
+                </address>
             </div>
         </div>
     </div>
