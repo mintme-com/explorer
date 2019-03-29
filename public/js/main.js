@@ -119,7 +119,7 @@ BlocksApp.config(['$stateProvider', '$urlRouterProvider', function($stateProvide
             }
         })
         .state('address', {
-            url: "/addr/{hash}",
+            url: "/addr{dummy:(?:ess)?}/{hash}",
             templateUrl: "views/address.html",
             data: {pageTitle: 'Address'},
             controller: "AddressController",
@@ -210,6 +210,24 @@ BlocksApp.config(['$stateProvider', '$urlRouterProvider', function($stateProvide
                              '/js/controllers/TxController.js'
                         ]
                     });
+                }]
+            }
+        })
+        .state('viewcontract', {
+            url: "/contract",
+            templateUrl: "views/contract.html",
+            data: {pageTitle: 'Verify Contract'},
+            controller: "ContractController",
+            resolve: {
+                deps: ['$ocLazyLoad', function($ocLazyLoad) {
+                    return $ocLazyLoad.load({
+                        name: 'BlocksApp',
+                        insertBefore: '#ng_load_plugins_before',
+                        files: [
+                             '/js/controllers/ContractController.js',
+                             '/js/custom.js'
+                         ]
+                     });
                 }]
             }
         })
@@ -304,23 +322,6 @@ BlocksApp.config(['$stateProvider', '$urlRouterProvider', function($stateProvide
                         insertBefore: '#ng_load_plugins_before',
                         files: [
                              '/js/controllers/TokenController.js'
-                        ]
-                    });
-                }]
-            }
-        })
-        .state('dao', {
-            url: "/dao",
-            templateUrl: "views/dao.html",
-            data: {pageTitle: 'theDAO'},
-            controller: "DAOController",
-            resolve: {
-                deps: ['$ocLazyLoad', function($ocLazyLoad) {
-                    return $ocLazyLoad.load({
-                        name: 'BlocksApp',
-                        insertBefore: '#ng_load_plugins_before',
-                        files: [
-                             '/js/controllers/DAOController.js'
                         ]
                     });
                 }]
