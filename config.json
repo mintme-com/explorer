@@ -27,7 +27,7 @@
         "gitter": "https://gitter.im/webchain-network/public",
         "logo": "/img/explorer-logo.png",
         "customCss": "green-haze.min.css",
-        "copyright": "2018 &copy; Webchain explorer.",
+        "copyright": "2018-2019 &copy; Webchain explorer.",
         "useEthFiat": false,
         "poweredbyCustom": "Powered by <a href=\"https://github.com/webchain-network/explorer\" target=\"_blank\">Webchain explorer</a>",
         "miners": {
