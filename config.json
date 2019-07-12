@@ -33,6 +33,7 @@
         "poweredbyCustom": "Powered by <a href=\"https://github.com/webchain-network/explorer\" target=\"_blank\">Webchain explorer</a>",
         "miners": {
          },
-        "analytics-code": "UA-1111111-00"
+        "analytics-code": "UA-1111111-00",
+        "notificationCookie": "This website uses cookies"
     }
 }
