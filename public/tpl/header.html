@@ -1,37 +1,35 @@
 <!-- BEGIN HEADER TOP -->
 <div class="page-header-top">
-    <div class="container">
+  <div class="container">
     <!-- BEGIN LOGO -->
     <div class="page-logo">
-        <a href="/">
-            <img ng-show="settings.logo" src="{{settings.logo}}" alt="logo" class="logo-default" />
-        </a>
+      <a href="/">
+      <img ng-show="settings.logo" src="{{settings.logo}}" alt="logo" class="logo-default" />
+      </a>
     </div>
     <!-- END LOGO -->
-            <!-- BEGIN RESPONSIVE MENU TOGGLER -->
-        <a href="javascript:;" class="menu-toggler btn btn-sm green-haze btn-outline">MENU</a>
-        <!-- END RESPONSIVE MENU TOGGLER -->
-        <!-- BEGIN TOP NAVIGATION MENU -->
-        <div class="top-menu">
-            <ul class="nav navbar-nav pull-right">
-                <li class="dropdown">
-                    <form name="form.searchForm" class="search-form">
-                        <div class="input-group">
-                            <input type="text" name="explorerSearch" class="form-control" placeholder="Search by Address / Txhash / BlockNum / BlockHash" ng-model="form.searchInput" ng-keyup="$event.keyCode == 13 ? searchQuery(form.searchInput) : null">
-                            <span class="input-group-btn">
-                                <a class="btn" ng-click="searchQuery(form.searchInput)">
-                                    <i class="icon-magnifier"></i>
-                                </a>
-                            </span>
-                        </div>
-                    </form>
-                </li>
-
-
-            </ul>
-        </div>
-        <!-- END TOP NAVIGATION MENU -->
+    <!-- BEGIN RESPONSIVE MENU TOGGLER -->
+    <a href="#" class="menu-toggler btn btn-sm green-haze btn-outline">MENU</a>
+    <!-- END RESPONSIVE MENU TOGGLER -->
+    <!-- BEGIN TOP NAVIGATION MENU -->
+    <div class="top-menu">
+      <ul class="nav navbar-nav pull-right">
+        <li class="dropdown">
+          <form name="form.searchForm" class="search-form">
+            <div class="input-group">
+              <input type="text" name="explorerSearch" class="form-control" placeholder="Search by Address / Txhash / BlockNum / BlockHash" ng-model="form.searchInput" ng-keyup="$event.keyCode == 13 ? searchQuery(form.searchInput) : null">
+              <span class="input-group-btn">
+              <a class="btn" ng-click="searchQuery(form.searchInput)">
+              <i class="icon-magnifier"></i>
+              </a>
+              </span>
+            </div>
+          </form>
+        </li>
+      </ul>
     </div>
+    <!-- END TOP NAVIGATION MENU -->
+  </div>
 </div>
 <!-- END HEADER TOP -->
 <!-- BEGIN HEADER MENU -->
@@ -58,5 +56,7 @@
         </div>
         <!-- END MEGA MENU -->
     </div>
+    <!-- END MEGA MENU -->
+  </div>
 </div>
 <!-- END HEADER INNER -->
