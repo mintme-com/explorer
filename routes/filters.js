@@ -8,7 +8,9 @@ const RLP = require('rlp');
   Filter an array of TX
 */
 function filterTX(txs, value) {
-  return txs.map(tx => [tx.hash, tx.blockNumber, tx.from, tx.to, etherUnits.toEther(new BigNumber(tx.value), 'ether'), tx.gas, tx.timestamp, tx.creates]);
+  return txs.map(function(tx){
+    return [tx.hash, tx.blockNumber, tx.from, tx.to, etherUnits.toEther(new BigNumber(tx.value), 'ether'), tx.gas, tx.timestamp, tx.creates];
+  })
 }
 
 function filterTrace(txs, value) {
