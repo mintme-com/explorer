@@ -357,7 +357,15 @@ exports.data = async function(req, res){
                 var tokenAddr = log.address;
                 if (!KnownTokenInfo[tokenAddr]) {
                   // not known tokens
-                  return;
+                  try {
+                      var contract = web3.eth.contract(ERC20ABI);
+                      var token = contract.at(tokenAddr);
+
+                      KnownTokenInfo[tokenAddr] = {symbol: token.symbol()};
+                      KnownTokenDecimalDivisors[tokenAddr] = new BigNumber(10).pow(token.decimals());
+                  } catch (e) {
+                      return;
+                  }
                 }
                 txn.from = '0x' + log.topics[1].substring(26);
                 txn.to = '0x' + log.topics[2].substring(26);
