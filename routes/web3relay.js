@@ -170,16 +170,32 @@ exports.data = async function(req, res){
           .exec(function(err, contractDb) {
             if (err || !contractDb) {
               console.log('Contract not found. tx.to = ', tx.to);
-              callback(null, tx, traces, null);
+              callback(null, tx, traces, null, null);
               return;
             }
             callback(null, tx, traces, contractDb, null);
           });
       } else {
         // creation contract case
-        callback(null, tx, traces, null);
+        callback(null, tx, traces, null, null);
       }
-    }], function(error, tx, traces, contractOrDb, tokenContract) {
+    }, function(tx, traces, contractOrDb, tokenContract, callback) {
+      var topics = [ web3.sha3('Transfer(address,address,uint256)') ];
+      var transfersFound = {};
+      var block = tx.blockNumber;
+      var filter = { fromBlock: block, toBlock: block, topics };
+      var ethFilter = web3.eth.filter(filter);
+      ethFilter.get(function(err, logs) {
+        if (err || !logs) {
+          console.error("LogWeb3 error :" + err)
+        } else {
+          logs.forEach(function(log) {
+            transfersFound[log.transactionHash] = true;
+          });
+        }
+        callback(null, tx, traces, contractOrDb, tokenContract, transfersFound)
+      });
+    }], function(error, tx, traces, contractOrDb, tokenContract, transfersFound) {
       if (error) {
         if (error === true)
           error = { error: true, message: 'normal TX' };
@@ -220,7 +236,7 @@ exports.data = async function(req, res){
 
         var txns = filterTrace(traces);
         txns.forEach(function(trace) {
-          if(!trace.error && trace.action.input && tokenContract) {
+          if(!trace.error && trace.action.input && tokenContract && transfersFound[trace.hash]) {
             trace.callInfo = abiDecoder.decodeMethod(trace.action.input);
             if (trace.callInfo.name == 'transfer') {
               var amount = new BigNumber(trace.callInfo.params[1].value);
