@@ -1,5 +1,5 @@
 angular.module('BlocksApp').controller('TokenController', function($stateParams, $rootScope, $scope, $http, $location) {
-    $scope.$on('$viewContentLoaded', function() {   
+    $scope.$on('$viewContentLoaded', function() {
         // initialize core components
         App.initAjax();
     });
@@ -23,8 +23,13 @@ angular.module('BlocksApp').controller('TokenController', function($stateParams,
       $scope.token = resp.data;
       $scope.token.address = address;
       $scope.addr = {"bytecode": resp.data.bytecode};
-      if (resp.data.name)
+      if (resp.data.name) {
         $rootScope.$state.current.data["pageTitle"] = resp.data.name;
+
+        if (resp.data.decimals == 4 && resp.data.name == resp.data.symbol) {
+            $rootScope.$state.current.data["isMintmeToken"] = true;
+        }
+      }
     });
 
     // fetch transactions
@@ -72,7 +77,7 @@ angular.module('BlocksApp').controller('TokenController', function($stateParams,
             $scope.showTokens = true;
             $scope.userTokens = resp.data.tokens;
           });
-        } else 
+        } else
             $scope.errors.address = "Invalid Address";
 
     }
