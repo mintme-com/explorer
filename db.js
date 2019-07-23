@@ -24,6 +24,14 @@ var Block = new Schema(
     "uncles": [String]
 });
 
+var Account = new Schema(
+{
+    "address": {type: String, index: {unique: true}},
+    "balance": Number,
+    "blockNumber": Number,
+    "type": {type: Number, default: 0} // address: 0x0, contract: 0x1
+});
+
 var Contract = new Schema(
 {
     "address": {type: String, index: {unique: true}},
@@ -45,6 +53,7 @@ var Transaction = new Schema(
     "transactionIndex": Number,
     "from": String,
     "to": String,
+    "creates": String,
     "value": String,
     "gas": Number,
     "gasPrice": String,
@@ -66,22 +75,43 @@ var BlockStat = new Schema(
     "uncleCount": Number
 });
 
+const Market = new Schema(
+  {
+    'symbol': String,
+    'timestamp': Number,
+    'quoteBTC': Number,
+    'quoteUSD': Number,
+  }, { collection: 'Market' },
+);
+
 // create indices
 Transaction.index({blockNumber:-1});
 Transaction.index({from:1, blockNumber:-1});
 Transaction.index({to:1, blockNumber:-1});
+Transaction.index({creates:1, blockNumber:-1});
+Account.index({balance:-1});
+Account.index({balance:-1, blockNumber:-1});
+Account.index({type:-1, balance:-1});
 Block.index({miner:1});
+Block.index({miner:1, blockNumber:-1});
+Market.index({ timestamp: -1 });
 
 mongoose.model('BlockStat', BlockStat);
 mongoose.model('Block', Block);
+mongoose.model('Account', Account);
 mongoose.model('Contract', Contract);
 mongoose.model('Transaction', Transaction);
+mongoose.model('Market', Market);
 module.exports.BlockStat = mongoose.model('BlockStat');
 module.exports.Block = mongoose.model('Block');
 module.exports.Contract = mongoose.model('Contract');
 module.exports.Transaction = mongoose.model('Transaction');
+module.exports.Account = mongoose.model('Account');
+module.exports.Market = mongoose.model('Market');
 
-
-mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost/blockDB');
+mongoose.Promise = global.Promise;
+mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost/blockDB', {
+  useMongoClient: true
+});
 
 // mongoose.set('debug', true);

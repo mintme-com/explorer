@@ -18,18 +18,17 @@ angular.module('BlocksApp').controller('AddressController', function($stateParam
       fetchTxs();
       if (resp.data.isContract) {
         $rootScope.$state.current.data["pageTitle"] = "Contract Address";
-        fetchInternalTxs();
+        $scope.isContract = true;
+      } else {
+        $rootScope.$state.current.data["pageTitle"] = "Address";
+        $scope.isContract = false;
       }
-    });
-
-    // fetch ethf balance 
-    if ($scope.settings.useEthFiat)
-    $http({
-      method: 'POST',
-      url: '/fiat',
-      data: {"addr": $scope.addrHash}
-    }).then(function(resp) {
-      $scope.addr.ethfiat = resp.data.balance;
+      if (resp.data.isTokenContract) {
+        $scope.isTokenContract = true;
+      } else {
+        $scope.isTokenContract = false;
+      }
+      fetchInternalTxs();
     });
 
     //fetch transactions
@@ -90,7 +89,7 @@ angular.module('BlocksApp').controller('AddressController', function($stateParam
                             }
                             else {
                                 vDeleteBlockAndDateFlag++;
-                            }    
+                            }
                             break;
                         }
                     }
@@ -141,7 +140,7 @@ angular.module('BlocksApp').controller('AddressController', function($stateParam
                     [10, 20, 50, 100, 150, 500],
                     [10, 20, 50, 100, 150, 500] // change per page values here
                 ],
-        "pageLength": 20, 
+        "pageLength": 20,
         "order": [
             [6, "desc"]
         ],
@@ -151,11 +150,15 @@ angular.module('BlocksApp').controller('AddressController', function($stateParam
           "infoEmpty": "",
           "infoFiltered": "(filtered from _MAX_ total txs)"
         },
-        "columnDefs": [ 
+        "columnDefs": [
           { "targets": [ 5 ], "visible": false, "searchable": false },
           {"type": "date", "targets": 6},
           {"orderable": false, "targets": [0,2,3,4]},
           { "render": function(data, type, row) {
+                        if (data == null) {
+                          return '<i class="fa fa-file-text-o" title="Contract"></i> ' +
+                            '<a href="/addr/'+row[7]+'">'+row[7]+'</a>';
+                        }
                         if (data != $scope.addrHash)
                           return '<a href="/addr/'+data+'">'+data+'</a>'
                         else
@@ -174,16 +177,35 @@ angular.module('BlocksApp').controller('AddressController', function($stateParam
       });
     }
 
-    var fetchInternalTxs = function() {
+    var fetchInternalTxs = function(after) {
+      var data = {"addr_trace": $scope.addrHash};
+      if (after && after > 0) {
+        data.after = after;
+      }
       $http({
         method: 'POST',
         url: '/web3relay',
-        data: {"addr_trace": $scope.addrHash}
+        data
       }).then(function(resp) {
-        $scope.internal_transactions = resp.data;
-      });      
-    }
-    
+        if (resp.data.transactions) {
+          $scope.internal_transactions = resp.data.transactions;
+          if ($scope.isContract) {
+            $scope.addr.creator = resp.data.createTransaction.from;
+            $scope.addr.transaction = resp.data.createTransaction.hash;
+          }
+          $scope.page = { count: resp.data.count, after: resp.data.after, next: resp.data.after + resp.data.count};
+          if (resp.data.after > 0) {
+            $scope.page.prev = resp.data.after - resp.data.count;
+          } else {
+            $scope.page.prev = 0;
+          }
+        } else {
+          $scope.internal_transactions = resp.data;
+        }
+      });
+    };
+    $scope.fetchInternalTxs = fetchInternalTxs;
+
 })
 .directive('contractSource', function($http) {
   return {

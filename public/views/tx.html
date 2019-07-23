@@ -15,11 +15,12 @@
           <tr ><td width="25%">from</td>
                 <td><a href="/addr/{{tx.from}}">{{tx.from}}</a></td></tr>
           <tr ng-show="tx.to"><td width="25%">to</td>
-                <td><a href="/addr/{{tx.to}}">{{tx.to}}</a></td></tr>
+                <td><span ng-show="tx.isTrace">Contract </span><a href="/addr/{{tx.to}}">{{tx.to}}</a></td></tr>
           <tr ng-show="tx.creates"><td width="25%">creates</td>
                 <td><a href="/addr/{{tx.creates}}">{{tx.creates}}</a></td></tr>
           <tr ><td width="25%">value</td><td>{{tx.value}} {{ settings.symbol }}</td></tr>
           <tr ><td width="25%">gas Provided</td><td>{{tx.gas | number}}</td></tr>
+          <tr ><td width="25%">gas Used</td><td>{{tx.gasUsed | number}}</td></tr>
           <tr ><td width="25%">gasPrice</td><td>{{tx.gasPrice | number}}</td></tr>
           <tr ><td width="25%">nonce</td><td>{{tx.nonce}}</td></tr>
           <tr ><td width="25%">Input Data</td><td><pre class="code">{{tx.input}}</pre></td></tr>
@@ -31,23 +32,18 @@
                   <th> From </th>
                   <th> To </th>
                   <th style="text-align:right"> Amount </th>
-                  <th style="text-align:right"> Gas </th>
-                  <th style="text-align:right"> GasUsed </th>
-                  <th></th>
+                  <th style="text-align:center"> Call </th>
               </tr>
           </thead>
           <tbody>
               <tr ng-repeat="t in internal_transactions track by $index">
                   <td class="truncate-addrhash"> <a href="/addr/{{t.from}}">{{t.from}}</a> </td>
                   <td class="truncate-addrhash"> <a href="/addr/{{t.to}}">{{t.to}}</a> </td>
-                  <td style="text-align:right"> {{t.value}} </td>
-                  <td style="text-align:right"> {{t.gas}} </td>
-                  <td style="text-align:right"> {{t.gasUsed}} </td>
+                  <td style="text-align:right"> <span ng-show="t.value != 0">{{t.value}} {{settings.symbol}}</span><span ng-show="t.amount">{{t.amount | number}}</span> </td>
                   <td style="text-align:center"><span class="label label-sm label-info {{t.type}}"> {{t.type}}</span><span class="label label-sm label-danger" ng-show="t.error"> {{t.error}}</span></td>
               </tr>
           </tbody>
         </table>
     </div>
-
   </div>
 </div>

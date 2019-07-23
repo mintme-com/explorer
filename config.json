@@ -1,7 +1,8 @@
 {
     "nodeAddr":     "localhost",
-    "gethPort":     39573,
+    "wsPort":       39574,
     "startBlock":   0,
+    "endBlock":     "latest",
     "quiet":        false,
     "syncAll":      true,
     "patch":        true,
@@ -28,7 +29,8 @@
         "logo": "/img/explorer-logo.png",
         "customCss": "green-haze.min.css",
         "copyright": "2018-2019 &copy; Webchain explorer.",
-        "useEthFiat": false,
+        "useRichList": true,
+        "useFiat": false,
         "poweredbyCustom": "Powered by <a href=\"https://github.com/webchain-network/explorer\" target=\"_blank\">Webchain explorer</a>",
         "miners": {
          },

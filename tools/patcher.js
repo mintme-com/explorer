@@ -2,13 +2,47 @@ require( '../db.js' );
 var etherUnits = require("../lib/etherUnits.js");
 var BigNumber = require('bignumber.js');
 
-var fs = require('fs');
-
 var Web3 = require('web3');
 
 var mongoose        = require( 'mongoose' );
 var Block           = mongoose.model( 'Block' );
 var Transaction     = mongoose.model( 'Transaction' );
+
+function normalizeTX(txData, blockData) {
+  var tx = {
+    blockHash: txData.blockHash,
+    blockNumber: txData.blockNumber,
+    from: txData.from,
+    to: txData.to,
+    hash: txData.hash,
+    value: etherUnits.toEther(new BigNumber(txData.value), 'wei'),
+    nonce: txData.nonce,
+    r: txData.r,
+    s: txData.s,
+    v: txData.v,
+    gas: txData.gas,
+    gasPrice: txData.gasPrice,
+    input: txData.input,
+    transactionIndex: txData.transactionIndex,
+    timestamp: blockData.timestamp
+  };
+  if (txData.to == null) {
+    // parity support `creates` field
+    if (txData.creates) {
+      tx.creates = txData.creates;
+      return tx;
+    } else {
+      // getTransactionReceipt to get contract address
+      var receipt = web3.eth.getTransactionReceipt(tx.hash);
+      if (receipt && receipt.contractAddress) {
+        tx.creates = receipt.contractAddress;
+      }
+      return tx;
+    }
+  } else {
+    return tx;
+  }
+}
 
 var grabBlock = function(config, web3, blockHashOrNumber) {
     var desiredBlockHashOrNumber;
@@ -83,9 +117,9 @@ var writeTransactionsToDB = function(config, blockData) {
     if (blockData.transactions.length > 0) {
         for (d in blockData.transactions) {
             var txData = blockData.transactions[d];
-            txData.timestamp = blockData.timestamp;
-            txData.value = etherUnits.toEther(new BigNumber(txData.value), 'wei');
-            bulkOps.push(txData);
+
+            var tx = normalizeTX(txData, blockData);
+            bulkOps.push(tx);
         }
         Transaction.collection.insert(bulkOps, function( err, tx ){
             if ( typeof err !== 'undefined' && err ) {
@@ -109,9 +143,6 @@ var writeTransactionsToDB = function(config, blockData) {
   Patch Missing Blocks
 */
 var patchBlocks = function(config) {
-    var web3 = new Web3(new Web3.providers.HttpProvider('http://localhost:' +
-        config.gethPort.toString()));
-
     // number of blocks should equal difference in block numbers
     var firstBlock = 0;
     var lastBlock = web3.eth.blockNumber - 1;
@@ -151,32 +182,24 @@ var blockIter = function(web3, firstBlock, lastBlock, config) {
     }
 }
 
-var config = {};
-
+// load config.json
+var config = { nodeAddr: 'localhost', gethPort: 8545 };
 try {
-    var configContents = fs.readFileSync('config.json');
-    config = JSON.parse(configContents);
-}
-catch (error) {
-    if (error.code === 'ENOENT') {
-        console.log('No config file found. Using default configuration (will ' +
-            'download all blocks starting from latest)');
-    }
-    else {
+    var local = require('../config.json');
+    _.extend(config, local);
+    console.log('config.json found.');
+} catch (error) {
+    if (error.code === 'MODULE_NOT_FOUND') {
+        var local = require('../config.example.json');
+        _.extend(config, local);
+        console.log('No config file found. Using default configuration... (config.example.json)');
+    } else {
         throw error;
         process.exit(1);
     }
 }
-// set the default geth port if it's not provided
-if (!('gethPort' in config) || (typeof config.gethPort) !== 'number') {
-    config.gethPort = 8545; // default
-}
-
-// set the default output directory if it's not provided
-if (!('output' in config) || (typeof config.output) !== 'string') {
-    config.output = '.'; // default this directory
-}
 
 console.log('Connecting ' + config.nodeAddr + ':' + config.gethPort + '...');
+var web3 = new Web3(new Web3.providers.HttpProvider('http://' + config.nodeAddr + ':' + config.gethPort.toString()));
 
 patchBlocks(config);
