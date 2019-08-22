@@ -679,11 +679,11 @@ exports.data = async function(req, res){
         }
       });
     } else {
-      console.error("Invalid Request: " + action)
+      console.error("Invalid Request: " + req.body)
       res.status(400).send();
     }
   } else {
-    console.error("Invalid Request: " + action)
+    console.error("Invalid Request: " + req.body)
     res.status(400).send();
   }
 
