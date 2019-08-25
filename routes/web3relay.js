@@ -672,6 +672,7 @@ exports.data = async function(req, res){
               console.log("StatsWeb3: check block: " + block.number);
               var blocktime = (latest.timestamp - block.timestamp) / nblock;
               var hashrate = latest.difficulty / blocktime;
+              res.setHeader('Content-Type', 'application/json')
               res.write(JSON.stringify({"blockHeight": latest.number, "difficulty": latest.difficulty, "blockTime": blocktime, "hashrate": hashrate }));
             }
             res.end();
