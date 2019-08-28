@@ -653,6 +653,7 @@ exports.data = async function(req, res){
 
   } else if ("action" in req.body) {
     if (req.body.action == 'hashrate') {
+      res.setHeader('Content-Type', 'application/json');
       web3.eth.getBlock('latest', function(err, latest) {
         if(err || !latest) {
           console.error("StatsWeb3 error :" + err);
@@ -672,7 +673,6 @@ exports.data = async function(req, res){
               console.log("StatsWeb3: check block: " + block.number);
               var blocktime = (latest.timestamp - block.timestamp) / nblock;
               var hashrate = latest.difficulty / blocktime;
-              res.setHeader('Content-Type', 'application/json')
               res.write(JSON.stringify({"blockHeight": latest.number, "difficulty": latest.difficulty, "blockTime": blocktime, "hashrate": hashrate }));
             }
             res.end();
