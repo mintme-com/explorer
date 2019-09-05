@@ -652,6 +652,7 @@ exports.data = async function(req, res){
     });
 
   } else if ("action" in req.body) {
+    res.setHeader('Content-Type', 'application/json');
     if (req.body.action == 'hashrate') {
       web3.eth.getBlock('latest', function(err, latest) {
         if(err || !latest) {
