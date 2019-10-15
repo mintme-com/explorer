@@ -148,3 +148,8 @@ li.ng-scope {
 .mini-logo {
   height: 1.2em;
 }
+
+.table-container-responsive {
+    max-width: 98% !important;
+    overflow-y:scroll;
+}
