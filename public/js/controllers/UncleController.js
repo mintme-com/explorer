@@ -14,7 +14,7 @@ angular.module('BlocksApp').controller('UncleController', function($stateParams,
     //fetch transactions
     $http({
       method: 'POST',
-      url: '/web3relay',
+      url: $rootScope.settings.path + 'web3relay',
       data: {"uncle": $stateParams.number}
     }).then(function(resp) {
       if (resp.data.error)

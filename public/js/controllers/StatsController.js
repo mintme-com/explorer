@@ -35,7 +35,7 @@ angular.module('BlocksApp').controller('StatsController', function($stateParams,
     scope: true,
     link: function(scope, elem, attrs) {
       scope.stats = {};
-      var statsURL = "/stats";
+      var statsURL = $rootScope.settings.path + "stats";
 
       $http.post(statsURL, {"action": "miners"})
         .then(function(res) {
@@ -233,7 +233,7 @@ angular.module('BlocksApp').controller('StatsController', function($stateParams,
     template: '<svg id="hashrates" width="100%" height="500px"></svg>',
     scope: true,
     link: function(scope, elem, attrs) {
-      $http.post("/stats", {"action": "hashrates"})
+      $http.post($rootScope.settings.path + "stats", {"action": "hashrates"})
         .then(function(res) {
           //console.log(res.data);
 
@@ -480,7 +480,7 @@ angular.module('BlocksApp').controller('StatsController', function($stateParams,
     template: '<svg id="difficulty" width="100%" height="500px"></svg>',
     scope: true,
     link: function(scope, elem, attrs) {
-      $http.post("/stats", {"action": "hashrates"})
+      $http.post($rootScope.settings.path + "stats", {"action": "hashrates"})
         .then(function(res) {
           scope.init(res.data, "#difficulty");
         });
@@ -691,7 +691,7 @@ angular.module('BlocksApp').controller('StatsController', function($stateParams,
     template: '<svg id="blocktime" width="100%" height="500px"></svg>',
     scope: true,
     link: function(scope, elem, attrs) {
-      $http.post("/stats", {"action": "hashrates"})
+      $http.post($rootScope.settings.path + "stats", {"action": "hashrates"})
         .then(function(res) {
 
           scope.init(res.data, "#blocktime");

@@ -16,7 +16,7 @@ angular.module('BlocksApp').controller('TokenController', function($stateParams,
     //fetch dao stuff
     $http({
       method: 'POST',
-      url: '/tokenrelay',
+      url: $rootScope.settings.path + 'tokenrelay',
       data: {"action": "info", "address": address}
     }).then(function(resp) {
       console.log(resp.data)
@@ -40,7 +40,7 @@ angular.module('BlocksApp').controller('TokenController', function($stateParams,
       }
       $http({
         method: 'POST',
-        url: '/tokenrelay',
+        url: $rootScope.settings.path + 'tokenrelay',
         data
       }).then(function(resp) {
         $scope.contract_transactions = resp.data.transaction;
@@ -70,7 +70,7 @@ angular.module('BlocksApp').controller('TokenController', function($stateParams,
         if (isAddress(addr)) {
           $http({
             method: 'POST',
-            url: '/tokenrelay',
+            url: $rootScope.settings.path + 'tokenrelay',
             data: {"action": "balanceOf", "user": addr, "address": address}
           }).then(function(resp) {
             console.log(resp.data)
@@ -86,13 +86,13 @@ angular.module('BlocksApp').controller('TokenController', function($stateParams,
 .directive('contractSource', function($http) {
   return {
     restrict: 'E',
-    templateUrl: '/views/contract-source.html',
+    templateUrl: 'views/contract-source.html',
     scope: false,
     link: function(scope, elem, attrs){
         //fetch contract stuff
         $http({
           method: 'POST',
-          url: '/compile',
+          url: $rootScope.settings.path + 'compile',
           data: {"addr": scope.addrHash, "action": "find"}
         }).then(function(resp) {
           scope.contract = resp.data;
@@ -114,7 +114,7 @@ angular.module('BlocksApp').controller('TokenController', function($stateParams,
       }
       $http({
         method: 'POST',
-        url: '/tokenrelay',
+        url: $rootScope.settings.path + 'tokenrelay',
         data
       }).then(function(resp) {
         scope.transfer_tokens = resp.data.transfer;

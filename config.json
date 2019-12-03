@@ -25,7 +25,7 @@
         "telegram_channel": "https://www.t.me/webchainnetwork",
         "discord": "https://discord.gg/uuZXhCn",
         "gitter": "https://gitter.im/webchain-network/public",
-        "logo": "/img/explorer-logo.png",
+        "logo": "img/explorer-logo.png",
         "customCss": "green-haze.min.css",
         "copyright": "2018-2019 &copy; Webchain explorer.",
         "useRichList": true,
@@ -33,6 +33,7 @@
         "poweredbyCustom": "Powered by <a href=\"https://github.com/webchain-network/explorer\" target=\"_blank\">Webchain explorer</a>",
         "miners": {
          },
-        "analytics-code": "UA-1111111-00"
+        "analytics-code": "UA-1111111-00",
+        "path": "/coin/explorer/"
     }
 }
