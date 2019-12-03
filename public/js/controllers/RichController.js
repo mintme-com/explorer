@@ -6,7 +6,7 @@ angular.module('BlocksApp').controller('RichController', function($stateParams, 
 
     if(!dataSet[0][0].startsWith('<')) {
         for(var i=0; i<dataSet.length; i++) {
-            dataSet[i][0] = '<a href="/addr/' + dataSet[i][0] + '">' + dataSet[i][0] + '</a>';
+            dataSet[i][0] = '<a href="addr/' + dataSet[i][0] + '">' + dataSet[i][0] + '</a>';
         }
     }
 

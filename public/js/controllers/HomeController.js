@@ -4,7 +4,7 @@ angular.module('BlocksApp').controller('HomeController', function($rootScope, $s
         App.initAjax();
     });
 
-    var URL = '/data';
+    var URL = $rootScope.settings.path + 'data';
 
     $rootScope.isHome = true;
 
@@ -36,14 +36,14 @@ angular.module('BlocksApp').controller('HomeController', function($rootScope, $s
     $scope.blockLoading = false;
     $scope.settings = $rootScope.setup;
 })
-.directive('simpleSummaryStats', function($http) {
+.directive('simpleSummaryStats', function($http, $rootScope) {
   return {
     restrict: 'E',
-    templateUrl: '/views/simple-summary-stats.html',
+    templateUrl: 'views/simple-summary-stats.html',
     scope: true,
     link: function(scope, elem, attrs){
       scope.stats = {};
-      var statsURL = "/web3relay";
+      var statsURL = $rootScope.settings.path + "web3relay";
       $http.post(statsURL, {"action": "hashrate"})
        .then(function(res){
           scope.stats.hashrate = res.data.hashrate;
@@ -58,6 +58,6 @@ angular.module('BlocksApp').controller('HomeController', function($rootScope, $s
 .directive('siteNotes', function() {
   return {
     restrict: 'E',
-    templateUrl: '/views/site-notes.html'
+    templateUrl: 'views/site-notes.html'
   }
 });

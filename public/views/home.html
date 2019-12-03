@@ -21,13 +21,13 @@
         <div ng-repeat="t in latest_blocks track by $index" class="todo-tasklist-item item-border-green row" ng-class="(t.extraData.indexOf('Parity') > -1) ? 'item-border-red': '';(t.extraData.indexOf('Pool') > -1) ? 'item-border-blue': ''">
           <!--TODO: color by known miners -->
           <div class="col-sm-5">
-            <span class="todo-tasklist-item-title"><i class="fa fa-cube"></i> <a href="/block/{{t.number}}">{{t.number}}</a></span><br>
+            <span class="todo-tasklist-item-title"><i class="fa fa-cube"></i> <a href="block/{{t.number}}">{{t.number}}</a></span><br>
             <span class="todo-tasklist-date">
             <i class="fa fa-hourglass-o"></i>{{t.timestamp | timeDuration }} ago</span>
           </div>
           <div class="todo-tasklist-controls col-sm-7">
-            <div class="todo-tasklist-item-text"><a href="/addr/{{t.miner}}">{{t.extraData}}</a><br>
-              by <a href="/addr/{{t.miner}}">{{t.miner}}</a><br>
+            <div class="todo-tasklist-item-text"><a href="addr/{{t.miner}}">{{t.extraData}}</a><br>
+              by <a href="addr/{{t.miner}}">{{t.miner}}</a><br>
               {{t.txn}} txns
             </div>
           </div>
@@ -57,13 +57,13 @@
         <div class="item"  ng-repeat="t in latest_txs track by $index">
           <div class="item-head">
             <div class="truncate-txhash" style="float:left">
-              TX <a href="/tx/{{t.hash}}" class="primary-link">{{t.hash}}</a>
+              TX <a href="tx/{{t.hash}}" class="primary-link">{{t.hash}}</a>
             </div>
             <div class="item-date" style="float:right">{{t.timestamp | timeDuration }} ago</div>
           </div>
           <div class="todo-tasklist-controls">
-            <span class="todo-tasklist-item-text">From <a href="/addr/{{t.from}}">{{t.from.substr(0,24)}}...</a></span>
-            <span class="todo-tasklist-item-text">To <a href="/addr/{{t.to}}">{{t.to.substr(0,24)}}...</a></span><br>
+            <span class="todo-tasklist-item-text">From <a href="addr/{{t.from}}">{{t.from.substr(0,24)}}...</a></span>
+            <span class="todo-tasklist-item-text">To <a href="addr/{{t.to}}">{{t.to.substr(0,24)}}...</a></span><br>
             <div class="todo-tasklist-item-text" style="margin-top:4px;">{{t.value}} {{settings.symbol}}</div>
           </div>
         </div>

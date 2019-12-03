@@ -14,8 +14,8 @@
               <tbody>
                 <tr ng-repeat="t in tokens track by $index">
                     <td> {{$index + 1}} </td>
-                    <td> <a href="/token/{{t.address}}">{{t.name}} ({{t.symbol}})</a> </td>
-                    <td> <a href="/token/{{t.address}}">{{t.address}}</a> </td>
+                    <td> <a href="token/{{t.address}}">{{t.name}} ({{t.symbol}})</a> </td>
+                    <td> <a href="token/{{t.address}}">{{t.address}}</a> </td>
                     <td> {{t.decimal}} </td>
                 </tr>
               </tbody>
