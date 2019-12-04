@@ -12,7 +12,7 @@ angular.module('BlocksApp').controller('TxController', function($stateParams, $r
     //fetch web3 stuff
     $http({
       method: 'POST',
-      url: '/web3relay',
+      url: $rootScope.settings.path + 'web3relay',
       data: {"tx": $scope.hash}
     }).then(function(resp) {
       if (resp.data.error) {
@@ -34,7 +34,7 @@ angular.module('BlocksApp').controller('TxController', function($stateParams, $r
     var fetchInternalTxs = function() {
       $http({
         method: 'POST',
-        url: '/web3relay',
+        url: $rootScope.settings.path + 'web3relay',
         data: {"tx_trace": $scope.hash}
       }).then(function(resp) {
         $scope.internal_transactions = resp.data;

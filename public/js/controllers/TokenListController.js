@@ -5,7 +5,7 @@ angular.module('BlocksApp').controller('TokenListController', function($statePar
     });
     $scope.settings = $rootScope.setup;
 
-    var tokenList = '/' + ($scope.settings.tokenList || 'tokens.json');
+    var tokenList = $rootScope.settings.path +  ($scope.settings.tokenList || 'tokens.json');
     $http.get(tokenList)
       .then(function(res){
         var contentType = res.headers('Content-Type');

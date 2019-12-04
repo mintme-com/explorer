@@ -52,7 +52,7 @@ angular.module('BlocksApp').controller('ContractController', function($statePara
         // send to web3 for validation
         $http({
           method: 'POST',
-          url: '/compile',
+          url: $rootScope.settings.path + 'compile',
           data: contractReq
         }).then(function(resp) {
           $("#submitCodeBtn").button("reset");

@@ -11,7 +11,7 @@ angular.module('BlocksApp').controller('AccountsController', function($statePara
         // get totalSupply only once.
         data.totalSupply = $scope.totalSupply || -1;
         data.recordsTotal = $scope.totalAccounts || 0;
-        $http.post('/richlist', data).then(function(resp) {
+        $http.post($rootScope.settings.path + 'richlist', data).then(function(resp) {
           // set the totalSupply
           if (resp.data.totalSupply) {
             $scope.totalSupply = resp.data.totalSupply;
@@ -51,7 +51,7 @@ angular.module('BlocksApp').controller('AccountsController', function($statePara
         {
           render:
             function(data, type, row) {
-              return '<a href="/addr/' + data +'">' + data + '</a>'
+              return '<a href="addr/' + data +'">' + data + '</a>'
             },
           targets: [1]
         },

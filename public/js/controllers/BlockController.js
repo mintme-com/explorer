@@ -12,11 +12,11 @@ angular.module('BlocksApp').controller('BlockController', function($stateParams,
     //fetch transactions
     $http({
       method: 'POST',
-      url: '/web3relay',
+      url: $rootScope.settings.path + 'web3relay',
       data: {"block": $scope.blockNum}
     }).then(function(resp) {
       if (resp.data.error)
-        $location.path("/err404/block/" + $scope.blockNum);
+        $location.path($rootScope.settings.path + "err404/block/" + $scope.blockNum);
       else {
         $scope.block = resp.data;
         $scope.block.datetime = new Date(resp.data.timestamp*1000); 

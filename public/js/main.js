@@ -24,9 +24,10 @@ BlocksApp.factory('settings', ['$rootScope', '$http', function($rootScope, $http
             pageBodySolid: false, // solid body color state
             pageAutoScrollOnLoad: 1000 // auto scroll to top on page load
         },
-        assetsPath: '/',
-        globalPath: '/',
-        layoutPath: '/',
+        assetsPath: '/coin/explorer/',
+        globalPath: '/coin/explorer/',
+        layoutPath: '/coin/explorer/',
+        path: '/coin/explorer/',
     };
 
     $rootScope.settings = settings;
@@ -35,7 +36,7 @@ BlocksApp.factory('settings', ['$rootScope', '$http', function($rootScope, $http
 
 /* Load config settings */
 BlocksApp.factory('setupObj', ['$rootScope', '$http', function($rootScope, $http) {
-    return $http.get('/config').then(function(res) {
+    return $http.get($rootScope.settings.path + 'config').then(function(res) {
         return res.data;
     })
 }]);
@@ -112,8 +113,8 @@ BlocksApp.config(['$stateProvider', '$urlRouterProvider', function($stateProvide
                         name: 'BlocksApp',
                         insertBefore: '#ng_load_plugins_before',
                         files: [
-                            '/js/controllers/HomeController.js',
-                            '/css/todo-2.min.css'
+                            'js/controllers/HomeController.js',
+                            'css/todo-2.min.css'
                         ]}]);
                 }]
             }
@@ -129,11 +130,11 @@ BlocksApp.config(['$stateProvider', '$urlRouterProvider', function($stateProvide
                         name: 'BlocksApp',
                         insertBefore: '#ng_load_plugins_before', // load the above css files before '#ng_load_plugins_before'
                         files: [
-                             '/js/controllers/AddressController.js',
-                            '/plugins/datatables/datatables.min.css',
-                            '/plugins/datatables/datatables.bootstrap.css',
-                            '/plugins/datatables/datatables.all.min.js',
-                            '/plugins/datatables/datatable.min.js'
+                             'js/controllers/AddressController.js',
+                            'plugins/datatables/datatables.min.css',
+                            'plugins/datatables/datatables.bootstrap.css',
+                            'plugins/datatables/datatables.all.min.js',
+                            'plugins/datatables/datatable.min.js'
                         ]
                     });
                 }]
@@ -150,11 +151,11 @@ BlocksApp.config(['$stateProvider', '$urlRouterProvider', function($stateProvide
                         name: 'BlocksApp',
                         insertBefore: '#ng_load_plugins_before', // load the above css files before '#ng_load_plugins_before'
                         files: [
-                            '/js/controllers/AccountsController.js',
-                            '/plugins/datatables/datatables.min.css',
-                            '/plugins/datatables/datatables.bootstrap.css',
-                            '/plugins/datatables/datatables.all.min.js',
-                            '/plugins/datatables/datatable.min.js'
+                            'js/controllers/AccountsController.js',
+                            'plugins/datatables/datatables.min.css',
+                            'plugins/datatables/datatables.bootstrap.css',
+                            'plugins/datatables/datatables.all.min.js',
+                            'plugins/datatables/datatable.min.js'
                         ]
                     });
                 }]
@@ -171,7 +172,7 @@ BlocksApp.config(['$stateProvider', '$urlRouterProvider', function($stateProvide
                         name: 'BlocksApp',
                         insertBefore: '#ng_load_plugins_before', // load the above css files before '#ng_load_plugins_before'
                         files: [
-                             '/js/controllers/BlockController.js'
+                             'js/controllers/BlockController.js'
                         ]
                     });
                 }]
@@ -189,7 +190,7 @@ BlocksApp.config(['$stateProvider', '$urlRouterProvider', function($stateProvide
                         name: 'BlocksApp',
                         insertBefore: '#ng_load_plugins_before', // load the above css files before '#ng_load_plugins_before'
                         files: [
-                             '/js/controllers/UncleController.js'
+                             'js/controllers/UncleController.js'
                         ]
                     });
                 }]
@@ -207,7 +208,7 @@ BlocksApp.config(['$stateProvider', '$urlRouterProvider', function($stateProvide
                         name: 'BlocksApp',
                         insertBefore: '#ng_load_plugins_before', // load the above css files before '#ng_load_plugins_before'
                         files: [
-                             '/js/controllers/TxController.js'
+                             'js/controllers/TxController.js'
                         ]
                     });
                 }]
@@ -224,8 +225,8 @@ BlocksApp.config(['$stateProvider', '$urlRouterProvider', function($stateProvide
                         name: 'BlocksApp',
                         insertBefore: '#ng_load_plugins_before',
                         files: [
-                             '/js/controllers/ContractController.js',
-                             '/js/custom.js'
+                             'js/controllers/ContractController.js',
+                             'js/custom.js'
                          ]
                      });
                 }]
@@ -242,8 +243,8 @@ BlocksApp.config(['$stateProvider', '$urlRouterProvider', function($stateProvide
                         name: 'BlocksApp',
                         insertBefore: '#ng_load_plugins_before',
                         files: [
-                             '/js/controllers/ContractController.js',
-                             '/js/custom.js'
+                             'js/controllers/ContractController.js',
+                             'js/custom.js'
                          ]
                      });
                 }]
@@ -259,10 +260,10 @@ BlocksApp.config(['$stateProvider', '$urlRouterProvider', function($stateProvide
                     return $ocLazyLoad.load({
                         insertBefore: '#ng_load_plugins_before', // load the above css files before '#ng_load_plugins_before'
                         files: [
-                             '/js/controllers/StatsController.js',
-                             '/css/stats.css',
-                             "/plugins/async.min.js",
-                             "/plugins/moment/moment.min.js"
+                             'js/controllers/StatsController.js',
+                             'css/stats.css',
+                             "plugins/async.min.js",
+                             "plugins/moment/moment.min.js"
                         ]
                     });
                 }]
@@ -278,16 +279,16 @@ BlocksApp.config(['$stateProvider', '$urlRouterProvider', function($stateProvide
                     return $ocLazyLoad.load({
                         insertBefore: '#ng_load_plugins_before', // load the above css files before '#ng_load_plugins_before'
                         files: [
-                             '/views/richlist.js',
-                             '/js/controllers/RichController.js',
-                             '/css/stats.css',
+                             'views/richlist.js',
+                             'js/controllers/RichController.js',
+                             'css/stats.css',
                              "https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.10/d3.js",
-                             "/plugins/async.min.js",
-                             "/plugins/moment/moment.min.js",
-                             '/plugins/datatables/datatables.min.css',
-                             '/plugins/datatables/datatables.bootstrap.css',
-                             '/plugins/datatables/datatables.all.min.js',
-                             '/plugins/datatables/datatable.min.js'
+                             "plugins/async.min.js",
+                             "plugins/moment/moment.min.js",
+                             'plugins/datatables/datatables.min.css',
+                             'plugins/datatables/datatables.bootstrap.css',
+                             'plugins/datatables/datatables.all.min.js',
+                             'plugins/datatables/datatable.min.js'
                         ]
                     });
                 }]
@@ -304,7 +305,7 @@ BlocksApp.config(['$stateProvider', '$urlRouterProvider', function($stateProvide
                         name: 'BlocksApp',
                         insertBefore: '#ng_load_plugins_before',
                         files: [
-                             '/js/controllers/TokenListController.js'
+                             'js/controllers/TokenListController.js'
                         ]
                     });
                 }]
@@ -321,7 +322,7 @@ BlocksApp.config(['$stateProvider', '$urlRouterProvider', function($stateProvide
                         name: 'BlocksApp',
                         insertBefore: '#ng_load_plugins_before',
                         files: [
-                             '/js/controllers/TokenController.js'
+                             'js/controllers/TokenController.js'
                         ]
                     });
                 }]
@@ -338,7 +339,7 @@ BlocksApp.config(['$stateProvider', '$urlRouterProvider', function($stateProvide
                         name: 'BlocksApp',
                         insertBefore: '#ng_load_plugins_before',
                         files: [
-                             '/js/controllers/ErrController.js'
+                             'js/controllers/ErrController.js'
                         ]
                     });
                 }]

@@ -11,7 +11,7 @@ angular.module('BlocksApp').controller('AddressController', function($stateParam
     //fetch web3 stuff
     $http({
       method: 'POST',
-      url: '/web3relay',
+      url: $rootScope.settings.path + 'web3relay',
       data: {"addr": $scope.addrHash, "options": ["balance", "count", "bytecode"]}
     }).then(function(resp) {
       $scope.addr = $.extend($scope.addr, resp.data);
@@ -40,7 +40,7 @@ angular.module('BlocksApp').controller('AddressController', function($stateParam
         ajax: function(data, callback, settings) {
             data.addr = $scope.addrHash;
             data.count = $scope.addr.count;
-            $http.post('/addr', data).then(function(resp) {
+            $http.post($rootScope.settings.path + 'addr', data).then(function(resp) {
             $('label input').on('keyup', function () {
                 resp.data.keyword = $('label').find('input').val();
             });
@@ -119,7 +119,7 @@ angular.module('BlocksApp').controller('AddressController', function($stateParam
           if (data.draw > 1)
             return;
 
-          $http.post('/addr_count', data).then(function(resp) {
+          $http.post($rootScope.settings.path + 'addr_count', data).then(function(resp) {
             $scope.addr.count = resp.data.recordsTotal;
             $scope.addr.mined = parseInt(resp.data.mined);
 
@@ -157,18 +157,18 @@ angular.module('BlocksApp').controller('AddressController', function($stateParam
           { "render": function(data, type, row) {
                         if (data == null) {
                           return '<i class="fa fa-file-text-o" title="Contract"></i> ' +
-                            '<a href="/addr/'+row[7]+'">'+row[7]+'</a>';
+                            '<a href="addr/'+row[7]+'">'+row[7]+'</a>';
                         }
                         if (data != $scope.addrHash)
-                          return '<a href="/addr/'+data+'">'+data+'</a>'
+                          return '<a href="addr/'+data+'">'+data+'</a>'
                         else
                           return data
                       }, "targets": [2,3]},
           { "render": function(data, type, row) {
-                        return '<a href="/block/'+data+'">'+data+'</a>'
+                        return '<a href="block/'+data+'">'+data+'</a>'
                       }, "targets": [1]},
           { "render": function(data, type, row) {
-                        return '<a href="/tx/'+data+'">'+data+'</a>'
+                        return '<a href="tx/'+data+'">'+data+'</a>'
                       }, "targets": [0]},
           { "render": function(data, type, row) {
                         return getDuration(data).toString();
@@ -184,7 +184,7 @@ angular.module('BlocksApp').controller('AddressController', function($stateParam
       }
       $http({
         method: 'POST',
-        url: '/web3relay',
+        url: $rootScope.settings.path + 'web3relay',
         data
       }).then(function(resp) {
         if (resp.data.transactions) {
@@ -207,16 +207,16 @@ angular.module('BlocksApp').controller('AddressController', function($stateParam
     $scope.fetchInternalTxs = fetchInternalTxs;
 
 })
-.directive('contractSource', function($http) {
+.directive('contractSource', function($http, $rootScope) {
   return {
     restrict: 'E',
-    templateUrl: '/views/contract-source.html',
+    templateUrl: 'views/contract-source.html',
     scope: false,
     link: function(scope, elem, attrs){
         //fetch contract stuff
         $http({
           method: 'POST',
-          url: '/compile',
+          url: $rootScope.settings.path + 'compile',
           data: {"addr": scope.addrHash, "action": "find"}
         }).then(function(resp) {
           console.log(resp.data);
