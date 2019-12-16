@@ -5,9 +5,9 @@
     "terminateAtExistingDB": false,
     "listenOnly": false,
     "settings": {
-        "symbol": "WEB",
-        "name": "Webchain",
-        "title": "Webchain Block Explorer",
-        "author": "Webchain project"
+        "symbol": "MINTME",
+        "name": "MintMe.com Coin",
+        "title": "MintMe.com Coin Block Explorer",
+        "author": "MintMe.com Coin project"
     }
 }
