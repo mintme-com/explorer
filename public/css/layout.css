@@ -1113,6 +1113,7 @@ body,html {
     font-size: 22px;
     font-weight: 400;
     margin: 0;
+    padding-left: 20px;
 }
 
 .page-head .page-title>h1>small {
