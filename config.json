@@ -34,6 +34,6 @@
         "miners": {
          },
         "analytics-code": "UA-1111111-00",
-        "path": "/coin/explorer/"
+        "path": "/explorer/"
     }
 }

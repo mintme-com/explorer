@@ -24,10 +24,10 @@ BlocksApp.factory('settings', ['$rootScope', '$http', function($rootScope, $http
             pageBodySolid: false, // solid body color state
             pageAutoScrollOnLoad: 1000 // auto scroll to top on page load
         },
-        assetsPath: '/coin/explorer/',
-        globalPath: '/coin/explorer/',
-        layoutPath: '/coin/explorer/',
-        path: '/coin/explorer/',
+        assetsPath: '/explorer/',
+        globalPath: '/explorer/',
+        layoutPath: '/explorer/',
+        path: '/explorer/',
     };
 
     $rootScope.settings = settings;
