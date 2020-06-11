@@ -1,9 +1,9 @@
 {
-  "name": "MintMe.com Coin Explorer",
+  "name": "MintMeCoinExplorer",
   "private": false,
   "version": "0.2.0",
   "description": "A lightweight webchain block explorer",
-  "repository": "https://github.com/webchain-network/explorer",
+  "repository": "https://github.com/mintme-com/explorer",
   "license": "MIT",
   "scripts": {
     "start": "concurrently \"node tools/sync.js \" \"node app.js\" ",
