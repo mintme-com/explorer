@@ -1,7 +1,8 @@
 div.page-logo {overflow: visible;}
 img.logo-default {
-    max-height: 150px;
-    height: 100px;
+    max-height: 80px;
+    height: 80px;
+    margin-top: 10px;
 }
 .create{background-color:#36c6d3}
 .truncate-txhash, .truncate-addrhash{
