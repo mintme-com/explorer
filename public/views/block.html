@@ -6,7 +6,7 @@
         <table class="col-md-6 table table-hover">
           <tr >
             <td width="25%">Block Height</td>
-            <td><a class="btn btn-info" ng-show="block.number > 0 && blockNum == block.number" href="block/{{block.number - 1}}">&lt;Prev</a> {{block.number | number}} <a class="btn btn-info" ng-show="blockNum == block.number" href="/block/{{block.number + 1}}">Next&gt;</a></td>
+            <td><a class="btn btn-info" ng-show="block.number > 0 && blockNum == block.number" href="block/{{block.number - 1}}">&lt;Prev</a> {{block.number | number}} <a class="btn btn-info" ng-show="blockNum == block.number" href="block/{{block.number + 1}}">Next&gt;</a></td>
           </tr>
           <tr >
             <td width="25%">TimeStamp</td>
@@ -24,7 +24,7 @@
             </td>
           </tr>
           <tr ><td width="25%">Sha3Uncles</td><td>{{block.sha3Uncles}}</td></tr>
-          <tr ><td width="25%">Mined by</td><td><a href="/addr/{{block.miner}}">{{block.miner}}</td></tr>
+          <tr ><td width="25%">Mined by</td><td><a href="addr/{{block.miner}}">{{block.miner}}</td></tr>
           <tr ><td width="25%">Difficulty</td><td>{{block.difficulty | totalDifficulty}}</td></tr>
           <tr ><td width="25%">Total Difficulty</td><td>{{block.totalDifficulty | totalDifficulty}}</td></tr>
           <tr ><td width="25%">Gas Limit</td><td>{{block.gasLimit | number}}</td></tr>
