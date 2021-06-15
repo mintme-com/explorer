@@ -467,7 +467,7 @@ const getQuote = async () => {
   const options = {
     timeout: 10000,
   };
-  const URL = `https://api.coingecko.com/api/v3/coins/${config.settings.name.toLowerCase()}`;
+  const URL = 'https://api.coingecko.com/api/v3/coins/webchain';
 
   try {
     const requestUSD = await fetch(URL);
