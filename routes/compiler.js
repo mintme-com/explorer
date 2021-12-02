@@ -2,51 +2,31 @@ const solc = require('solc');
 const { eth } = require('./web3relay');
 const Contract = require('./contracts');
 
-async function compileSolc(req, res) {
-  // get bytecode at address
-  const { address } = req.body;
-  const { version } = req.body;
-  const { name } = req.body;
-  const input = req.body.code;
-  const optimization = !!(req.body.optimization);
-  const optimise = (optimization) ? 1 : 0;
-
-  let bytecode = await eth.getCode(address);
-  if (bytecode.substring(0, 2) == '0x') bytecode = bytecode.substring(2);
-
-  const data = {
-    'address': address,
-    'compilerVersion': version,
-    'optimization': optimization,
-    'contractName': name,
-    'sourceCode': input,
+function getImputSource(body) {
+  const { name, code } = body;
+  return {
+    [name]: {
+      content: code,
+    },
   };
-
-  try {
-    // latest version doesn't need to be loaded remotely
-    if (version == 'latest') {
-      const output = solc.compile(input, optimise);
-      testValidCode(output, data, bytecode, res);
-    } else {
-
-      solc.loadRemoteVersion(version, (err, solcV) => {
-        if (err) {
-          console.error(err);
-          res.write(JSON.stringify({ 'valid': false }));
-          res.end();
-        } else {
-          const output = solcV.compile(input, optimise);
-          testValidCode(output, data, bytecode, res);
-        }
-      });
-    }
-    return;
-  } catch (e) {
-    console.error(e.stack);
-  }
-
 };
-
+function getImputSettings(body) {
+  return {
+    ...(body.optimization && {
+      optimizer: {
+        enabled: true,
+        runs: 200,
+      },
+    }),
+  };
+};
+function getInputFormat(body) {
+  return {
+    language: 'Solidity',
+    source: getImputSource(body),
+    settings: getImputSettings(body),
+  };
+};
 function testValidCode(output, data, bytecode, response) {
   const verifiedContracts = [];
   for (const contractName in output.contracts) {
@@ -86,12 +66,53 @@ function testValidCode(output, data, bytecode, response) {
   response.write(JSON.stringify(data));
   response.end();
 };
+async function compileSolc(req, res) {
+  // get bytecode at address
+  const { address } = req.body;
+  const { version } = req.body;
+  const { name } = req.body;
+  const input = getInputFormat(req.body);
+  const optimization = !!(req.body.optimization);
+
+  let bytecode = await eth.getCode(address);
+  if (bytecode.substring(0, 2) === '0x') bytecode = bytecode.substring(2);
+
+  const data = {
+    'address': address,
+    'compilerVersion': version,
+    'optimization': optimization,
+    'contractName': name,
+    'sourceCode': input,
+  };
+
+  try {
+    // latest version doesn't need to be loaded remotely
+    if (version === 'latest') {
+      const output = solc.compile(JSON.stringify(input));
+      testValidCode(output, data, bytecode, res);
+    } else {
+      solc.loadRemoteVersion(version, (err, solcV) => {
+        if (err) {
+          console.error(err);
+          res.write(JSON.stringify({ 'valid': false }));
+          res.end();
+        } else {
+          const output = solcV.compile(JSON.stringify(input));
+          testValidCode(output, data, bytecode, res);
+        }
+      });
+    }
+    return;
+  } catch (e) {
+    console.error(e.stack);
+  }
+
+};
 
 /*
   TODO: support other languages
 */
 module.exports = function (req, res) {
-  console.log(req.body);
   if (!('action' in req.body)) res.status(400).send();
   if (req.body.action === 'compile') {
     compileSolc(req, res);
