@@ -2,22 +2,7 @@ const solc = require('solc');
 const { eth } = require('./web3relay');
 const Contract = require('./contracts');
 
-/*
-  TODO: support other languages
-*/
-module.exports = function (req, res) {
-  console.log(req.body);
-  if (!('action' in req.body)) res.status(400).send();
-  if (req.body.action == 'compile') {
-    compileSolc(req, res);
-  } else if (req.body.action == 'find') {
-    Contract.findContract(req.body.addr, res);
-  }
-
-};
-
-var compileSolc = async (req, res) => {
-
+async function compileSolc(req, res) {
   // get bytecode at address
   const { address } = req.body;
   const { version } = req.body;
@@ -36,8 +21,6 @@ var compileSolc = async (req, res) => {
     'contractName': name,
     'sourceCode': input,
   };
-
-  console.log(version);
 
   try {
     // latest version doesn't need to be loaded remotely
@@ -64,9 +47,9 @@ var compileSolc = async (req, res) => {
 
 };
 
-var testValidCode = function (output, data, bytecode, response) {
+function testValidCode(output, data, bytecode, response) {
   const verifiedContracts = [];
-  for (var contractName in output.contracts) {
+  for (const contractName in output.contracts) {
     // code and ABI that are needed by web3
     console.log(`${contractName}: ${output.contracts[contractName].bytecode}`);
     verifiedContracts.push({
@@ -79,7 +62,7 @@ var testValidCode = function (output, data, bytecode, response) {
   // Remove swarm hash
   const bytecodeClean = bytecode.replace(/a165627a7a72305820.{64}0029$/gi, '');
 
-  var contractName = `:${data.contractName}`; // XXX
+  const contractName = `:${data.contractName}`; // XXX
 
   // compare to bytecode at address
   if (!output.contracts || !output.contracts[contractName]) data.valid = false;
@@ -102,4 +85,17 @@ var testValidCode = function (output, data, bytecode, response) {
   data['verifiedContracts'] = verifiedContracts;
   response.write(JSON.stringify(data));
   response.end();
+};
+
+/*
+  TODO: support other languages
+*/
+module.exports = function (req, res) {
+  console.log(req.body);
+  if (!('action' in req.body)) res.status(400).send();
+  if (req.body.action === 'compile') {
+    compileSolc(req, res);
+  } else if (req.body.action === 'find') {
+    Contract.findContract(req.body.addr, res);
+  }
 };
