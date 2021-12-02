@@ -33,39 +33,36 @@ function getInputFormat(body) {
   };
 };
 function testValidCode(output, data, bytecode, response) {
+  console.log(output);
+  const bytecodeClean = bytecode.replace(/a165627a7a72305820.{64}0029$/gi, '');
+  const { contractName } = data;
+  const contractSource = `${contractName}.sol`;
+
   const verifiedContracts = [];
-  for (const contractName in output.contracts) {
-    // code and ABI that are needed by web3
-    console.log(`${contractName}: ${output.contracts[contractName].bytecode}`);
+  for (const name in output.contracts[contractSource]) {
     verifiedContracts.push({
-      'name': contractName,
-      'abi': output.contracts[contractName].interface,
-      'bytecode': output.contracts[contractName].bytecode,
+      'name': name,
+      'abi': output.contracts[contractSource][name].abi,
+      'bytecode': output.contracts[contractSource][name].evm.bytecode.object,
     });
   }
-
-  // Remove swarm hash
-  const bytecodeClean = bytecode.replace(/a165627a7a72305820.{64}0029$/gi, '');
-
-  const contractName = `:${data.contractName}`; // XXX
-
   // compare to bytecode at address
-  if (!output.contracts || !output.contracts[contractName]) data.valid = false;
-  else if (output.contracts[contractName].bytecode.indexOf(bytecodeClean) > -1) {
-    let contractBytecodeClean = output.contracts[contractName].bytecode.replace(/a165627a7a72305820.{64}0029$/gi, '');
+  if (!output.contracts || !output.contracts[contractSource][contractName]) data.valid = false;
+  else {
+    let contractBytecodeClean = output.contracts[contractSource][contractName].evm.bytecode.object.replace(/a165627a7a72305820.{64}0029$/gi, '');
     constructorArgs = contractBytecodeClean.replace(bytecodeClean, '');
     contractBytecodeClean = contractBytecodeClean.replace(constructorArgs, '');
 
-    if (contractBytecodeClean == bytecodeClean) {
+    if (contractBytecodeClean === bytecodeClean) {
       data.valid = true;
       //write to db
-      data.abi = output.contracts[contractName].interface;
+      data.abi = output.contracts[contractSource][contractName].abi;
       data.byteCode = bytecode;
       Contract.addContract(data);
     } else {
       data.valid = false;
     }
-  } else data.valid = false;
+  }
 
   data['verifiedContracts'] = verifiedContracts;
   response.write(JSON.stringify(data));
