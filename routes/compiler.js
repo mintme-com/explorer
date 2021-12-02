@@ -2,16 +2,21 @@ const solc = require('solc');
 const { eth } = require('./web3relay');
 const Contract = require('./contracts');
 
-function getImputSource(body) {
+function getInputSource(body) {
   const { name, code } = body;
   return {
-    [name]: {
+    [`${name}.sol`]: {
       content: code,
     },
   };
 };
-function getImputSettings(body) {
+function getInputSettings(body) {
   return {
+    outputSelection: {
+      '*': {
+        '*': ['*'],
+      },
+    },
     ...(body.optimization && {
       optimizer: {
         enabled: true,
@@ -23,8 +28,8 @@ function getImputSettings(body) {
 function getInputFormat(body) {
   return {
     language: 'Solidity',
-    source: getImputSource(body),
-    settings: getImputSettings(body),
+    sources: getInputSource(body),
+    settings: getInputSettings(body),
   };
 };
 function testValidCode(output, data, bytecode, response) {
@@ -82,13 +87,13 @@ async function compileSolc(req, res) {
     'compilerVersion': version,
     'optimization': optimization,
     'contractName': name,
-    'sourceCode': input,
+    'sourceCode': req.body.code,
   };
 
   try {
     // latest version doesn't need to be loaded remotely
     if (version === 'latest') {
-      const output = solc.compile(JSON.stringify(input));
+      const output = JSON.parse(solc.compile(JSON.stringify(input)));
       testValidCode(output, data, bytecode, res);
     } else {
       solc.loadRemoteVersion(version, (err, solcV) => {
@@ -97,7 +102,7 @@ async function compileSolc(req, res) {
           res.write(JSON.stringify({ 'valid': false }));
           res.end();
         } else {
-          const output = solcV.compile(JSON.stringify(input));
+          const output = JSON.parse(solcV.compile(JSON.stringify(input)));
           testValidCode(output, data, bytecode, res);
         }
       });
