@@ -1,114 +1,41 @@
-const solc = require('solc');
-const { eth } = require('./web3relay');
 const Contract = require('./contracts');
+const { SolValidator } = require('../tools/solvalidator');
 
-function getInputSource(body) {
-  const { name, code } = body;
-  return {
-    [`${name}.sol`]: {
-      content: code,
-    },
-  };
-};
-function getInputSettings(body) {
-  return {
-    outputSelection: {
-      '*': {
-        '*': ['*'],
-      },
-    },
-    ...(body.optimization && {
-      optimizer: {
-        enabled: true,
-        runs: 200,
-      },
-    }),
-  };
-};
-function getInputFormat(body) {
-  return {
-    language: 'Solidity',
-    sources: getInputSource(body),
-    settings: getInputSettings(body),
-  };
-};
-function testValidCode(output, data, bytecode, response) {
-  console.log(output);
-  const bytecodeClean = bytecode.replace(/a165627a7a72305820.{64}0029$/gi, '');
-  const { contractName } = data;
-  const contractSource = `${contractName}.sol`;
-
+function formatVerifiedContracts(compiledSols) {
   const verifiedContracts = [];
-  for (const name in output.contracts[contractSource]) {
-    verifiedContracts.push({
-      'name': name,
-      'abi': output.contracts[contractSource][name].abi,
-      'bytecode': output.contracts[contractSource][name].evm.bytecode.object,
-    });
-  }
-  // compare to bytecode at address
-  if (!output.contracts || !output.contracts[contractSource][contractName]) data.valid = false;
-  else {
-    let contractBytecodeClean = output.contracts[contractSource][contractName].evm.bytecode.object.replace(/a165627a7a72305820.{64}0029$/gi, '');
-    constructorArgs = contractBytecodeClean.replace(bytecodeClean, '');
-    contractBytecodeClean = contractBytecodeClean.replace(constructorArgs, '');
-
-    if (contractBytecodeClean === bytecodeClean) {
-      data.valid = true;
-      //write to db
-      data.abi = output.contracts[contractSource][contractName].abi;
-      data.byteCode = bytecode;
-      Contract.addContract(data);
-    } else {
-      data.valid = false;
-    }
-  }
-
-  data['verifiedContracts'] = verifiedContracts;
-  response.write(JSON.stringify(data));
-  response.end();
-};
-async function compileSolc(req, res) {
-  // get bytecode at address
-  const { address } = req.body;
-  const { version } = req.body;
-  const { name } = req.body;
-  const input = getInputFormat(req.body);
-  const optimization = !!(req.body.optimization);
-
-  let bytecode = await eth.getCode(address);
-  if (bytecode.substring(0, 2) === '0x') bytecode = bytecode.substring(2);
-
-  const data = {
-    'address': address,
-    'compilerVersion': version,
-    'optimization': optimization,
-    'contractName': name,
-    'sourceCode': req.body.code,
-  };
-
-  try {
-    // latest version doesn't need to be loaded remotely
-    if (version === 'latest') {
-      const output = JSON.parse(solc.compile(JSON.stringify(input)));
-      testValidCode(output, data, bytecode, res);
-    } else {
-      solc.loadRemoteVersion(version, (err, solcV) => {
-        if (err) {
-          console.error(err);
-          res.write(JSON.stringify({ 'valid': false }));
-          res.end();
-        } else {
-          const output = JSON.parse(solcV.compile(JSON.stringify(input)));
-          testValidCode(output, data, bytecode, res);
-        }
+  Object.values(compiledSols.contracts).forEach((source) => {
+    Object.entries(source).forEach(([name, contract]) => {
+      verifiedContracts.push({
+        'name': name,
+        'abi': contract.abi,
+        'bytecode': contract.evm.bytecode.object,
       });
-    }
-    return;
-  } catch (e) {
-    console.error(e.stack);
-  }
+    });
+  });
+  return verifiedContracts;
+}
 
+/**
+ * TODO: add custom errors type suport
+ */
+async function validateSolc(req, res) {
+  const validator = new SolValidator(req.body)
+    .addSource(`${req.body.name}.sol`, req.body.code);
+  const data = {};
+  try {
+    await validator.validate();
+    data.valid = true;
+    data.abi = validator.contractSolc.abi;
+    data.byteCode = validator.contractBytecode;
+    Contract.addContract(data);
+  } catch (e) {
+    console.log('[solc]: ', { input: validator.solcInput, output: validator.compiledSols });
+    data.valid = false;
+  } finally {
+    if (validator.compiledSols) data.verifiedContracts = formatVerifiedContracts(validator.compiledSols);
+    res.write(JSON.stringify(data));
+    res.end();
+  }
 };
 
 /*
@@ -117,7 +44,7 @@ async function compileSolc(req, res) {
 module.exports = function (req, res) {
   if (!('action' in req.body)) res.status(400).send();
   if (req.body.action === 'compile') {
-    compileSolc(req, res);
+    validateSolc(req, res);
   } else if (req.body.action === 'find') {
     Contract.findContract(req.body.addr, res);
   }
