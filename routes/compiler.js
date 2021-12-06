@@ -29,10 +29,12 @@ async function validateSolc(req, res) {
     data.byteCode = validator.contractBytecode;
     Contract.addContract(data);
   } catch (e) {
-    console.log('[solc]: ', { input: validator.solcInput, output: validator.compiledSols });
+    console.log('[solc]: ', { input: validator.solcInput, output: validator.compiledSols, comparedBytecode: validator.compareBytecode });
     data.valid = false;
   } finally {
-    if (validator.compiledSols) data.verifiedContracts = formatVerifiedContracts(validator.compiledSols);
+    if (validator.compiledSols && validator.compiledSols.contracts) {
+      data.verifiedContracts = formatVerifiedContracts(validator.compiledSols);
+    }
     res.write(JSON.stringify(data));
     res.end();
   }
