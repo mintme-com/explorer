@@ -15,7 +15,6 @@ class SolValidator {
     this.contractBytecode = null;
     this.contractSolc = null;
     this.solVersion = configs.version;
-    this.solOptimizer = configs.optimization;
     this.solSources = configs.sources || {};
     this.solSettings = configs.settings || {
       outputSelection: {
@@ -24,13 +23,14 @@ class SolValidator {
         },
       },
     };
+    this.solOptimizer = configs.optimization;
     this.compiledSols = null;
   }
 
   /**
    * @property {bool} define if solc compiler use obtimizer
    */
-  set solcOptimizer(active) {
+  set solOptimizer(active) {
     if (active) {
       this.addSetting('optimizer', {
         enabled: true,
@@ -52,8 +52,8 @@ class SolValidator {
     return this;
   }
 
-  addSetting(newSetting) {
-    this.solSettings = { ...this.solcSettings, ...newSetting };
+  addSetting(name, content) {
+    this.solSettings[name] = content;
     return this;
   }
 
@@ -106,12 +106,16 @@ class SolValidator {
   }
 
   compareSources() {
+    if (this.contractBytecode === '') {
+      throw new Error('contract dont exist in address');
+    }
     const bytecodeClean = this.contractBytecode.replace(/a165627a7a72305820.{64}0029$/gi, '');
     const contractBytecode = this.contractSolc.evm.bytecode.object;
     let contractBytecodeClean = contractBytecode.replace(/a165627a7a72305820.{64}0029$/gi, '');
     const constructorArgs = contractBytecodeClean.replace(bytecodeClean, '');
     contractBytecodeClean = contractBytecodeClean.replace(constructorArgs, '');
 
+    this.compareBytecode = { addr: bytecodeClean, cont: contractBytecodeClean };
     if (contractBytecodeClean !== bytecodeClean) {
       throw new Error('contract validation failed');
     }
