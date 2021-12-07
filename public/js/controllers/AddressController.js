@@ -16,7 +16,10 @@ angular.module('BlocksApp').controller('AddressController', function($stateParam
     }).then(function(resp) {
       $scope.addr = $.extend($scope.addr, resp.data);
       fetchTxs();
-      if (resp.data.isContract) {
+      if ($scope.addrHash === '0x0000000000000000000000000000000000000000'){
+        $location.path("/err404/addr/" + $scope.addrHash);
+        return;
+      } else if (resp.data.isContract) {
         $rootScope.$state.current.data["pageTitle"] = "Contract Address";
         $scope.isContract = true;
       } else {
