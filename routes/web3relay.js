@@ -314,7 +314,7 @@ exports.data = async function(req, res){
               var supply = token.totalSupply();
             } catch (e) {
               // not a valid token
-              callback(null, transaction);
+              callback(null, transaction, null, null);
               return;
             }
 
