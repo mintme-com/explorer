@@ -1,99 +1,92 @@
-var mongoose = require( 'mongoose' );
-var Schema   = mongoose.Schema;
+const mongoose = require('mongoose');
 
-var Block = new Schema(
-{
-    "number": {type: Number, index: {unique: true}},
-    "hash": String,
-    "parentHash": String,
-    "nonce": String,
-    "sha3Uncles": String,
-    "logsBloom": String,
-    "transactionsRoot": String,
-    "stateRoot": String,
-    "receiptRoot": String,
-    "miner": String,
-    "difficulty": String,
-    "totalDifficulty": String,
-    "size": Number,
-    "extraData": String,
-    "gasLimit": Number,
-    "gasUsed": Number,
-    "timestamp": Number,
-    "blockTime": Number,
-    "uncles": [String]
+const Block = new mongoose.Schema({
+  'number': { type: Number, index: { unique: true } },
+  'hash': String,
+  'parentHash': String,
+  'nonce': String,
+  'sha3Uncles': String,
+  'logsBloom': String,
+  'transactionsRoot': String,
+  'stateRoot': String,
+  'receiptRoot': String,
+  'miner': String,
+  'difficulty': String,
+  'totalDifficulty': String,
+  'size': Number,
+  'extraData': String,
+  'gasLimit': Number,
+  'gasUsed': Number,
+  'timestamp': Number,
+  'blockTime': Number,
+  'uncles': [String],
 });
 
-var Account = new Schema(
-{
-    "address": {type: String, index: {unique: true}},
-    "balance": Number,
-    "blockNumber": Number,
-    "type": {type: Number, default: 0} // address: 0x0, contract: 0x1
+const Account = new mongoose.Schema({
+  'address': { type: String, index: { unique: true } },
+  'balance': Number,
+  'blockNumber': Number,
+  'type': { type: Number, default: 0 }, // address: 0x0, contract: 0x1
 });
 
-var Contract = new Schema(
-{
-    "address": {type: String, index: {unique: true}},
-    "creationTransaction": String,
-    "contractName": String,
-    "compilerVersion": String,
-    "optimization": Boolean,
-    "sourceCode": String,
-    "abi": String,
-    "byteCode": String
-}, {collection: "Contract"});
+const Contract = new mongoose.Schema({
+  'address': { type: String, index: { unique: true } },
+  'creationTransaction': String,
+  'contractName': String,
+  'compilerVersion': String,
+  'optimization': Boolean,
+  'sourceCode': String,
+  'abi': String,
+  'byteCode': String,
+  'valid': { type: Boolean, default: false },
+}, { collection: 'Contract' });
 
-var Transaction = new Schema(
-{
-    "hash": {type: String, index: {unique: true}},
-    "nonce": Number,
-    "blockHash": String,
-    "blockNumber": Number,
-    "transactionIndex": Number,
-    "from": String,
-    "to": String,
-    "creates": String,
-    "value": String,
-    "gas": Number,
-    "gasPrice": String,
-    "timestamp": Number,
-    "input": String
-}, {collection: "Transaction"});
+const Transaction = new mongoose.Schema({
+  'hash': { type: String, index: { unique: true } },
+  'nonce': Number,
+  'blockHash': String,
+  'blockNumber': Number,
+  'transactionIndex': Number,
+  'from': String,
+  'to': String,
+  'creates': String,
+  'value': String,
+  'gas': Number,
+  'gasPrice': String,
+  'timestamp': Number,
+  'input': String,
+}, { collection: 'Transaction' });
 
-var BlockStat = new Schema(
-{
-    "number": {type: Number, index: {unique: true}},
-    "timestamp": Number,
-    "difficulty": String,
-    "hashrate": String,
-    "txCount": Number,
-    "gasUsed": Number,
-    "gasLimit": Number,
-    "miner": String,
-    "blockTime": Number,
-    "uncleCount": Number
+const BlockStat = new mongoose.Schema({
+  'number': { type: Number, index: { unique: true } },
+  'timestamp': Number,
+  'difficulty': String,
+  'hashrate': String,
+  'txCount': Number,
+  'gasUsed': Number,
+  'gasLimit': Number,
+  'miner': String,
+  'blockTime': Number,
+  'uncleCount': Number,
 });
 
-const Market = new Schema(
-  {
-    'symbol': String,
-    'timestamp': Number,
-    'quoteBTC': Number,
-    'quoteUSD': Number,
-  }, { collection: 'Market' },
-);
+const Market = new mongoose.Schema({
+  'symbol': String,
+  'timestamp': Number,
+  'quoteBTC': Number,
+  'quoteUSD': Number,
+}, { collection: 'Market' });
 
 // create indices
-Transaction.index({blockNumber:-1});
-Transaction.index({from:1, blockNumber:-1});
-Transaction.index({to:1, blockNumber:-1});
-Transaction.index({creates:1, blockNumber:-1});
-Account.index({balance:-1});
-Account.index({balance:-1, blockNumber:-1});
-Account.index({type:-1, balance:-1});
-Block.index({miner:1});
-Block.index({miner:1, blockNumber:-1});
+Transaction.index({ blockNumber: -1 });
+Transaction.index({ from: 1, blockNumber: -1 });
+Transaction.index({ to: 1, blockNumber: -1 });
+Transaction.index({ creates: 1, blockNumber: -1 });
+Account.index({ balance: -1 });
+Account.index({ balance: -1, blockNumber: -1 });
+Account.index({ type: -1, balance: -1 });
+Block.index({ miner: 1 });
+Block.index({ miner: 1, blockNumber: -1 });
 Market.index({ timestamp: -1 });
 
 mongoose.model('BlockStat', BlockStat);
@@ -111,7 +104,7 @@ module.exports.Market = mongoose.model('Market');
 
 mongoose.Promise = global.Promise;
 mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost/blockDB', {
-  useMongoClient: true
+  useMongoClient: true,
 });
 
 // mongoose.set('debug', true);
