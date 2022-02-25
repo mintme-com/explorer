@@ -21,11 +21,19 @@ function formatVerifiedContracts(compiledSols) {
 async function validateSolc(req, res) {
   const validator = new SolValidator(req.body)
     .addSource(`${req.body.name}.sol`, req.body.code);
-  const data = {};
+
+  const data = {
+    address: req.body.address,
+    compilerVersion: req.body.version,
+    optimization: req.body.optimization,
+    contractName: req.body.name,
+    sourceCode: req.body.code,
+  };
+
   try {
     await validator.validate();
     data.valid = true;
-    data.abi = validator.contractSolc.abi;
+    data.abi = JSON.stringify(validator.contractSolc.abi);
     data.byteCode = validator.contractBytecode;
     Contract.addContract(data);
   } catch (e) {
