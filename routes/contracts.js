@@ -29,7 +29,6 @@ exports.findContract = function (address, res) {
       res.write(JSON.stringify({ 'valid': false }));
     } else {
       const data = doc;
-      data.valid = true;
       res.write(JSON.stringify(data));
     }
     res.end();
