@@ -154,3 +154,16 @@ li.ng-scope {
     max-width: 98% !important;
     overflow-y:scroll;
 }
+
+.tabbable-line>.nav-tabs{
+    display: flow-root;
+}
+.tabbable-line>.nav-tabs>li{
+    border-bottom: 4px solid white;
+}
+@media screen and (max-width: 375px) {
+	.tabbable-line>.nav-tabs>li>a{
+        padding-left: 7px;
+        padding-right: 7px;
+	}
+} 
