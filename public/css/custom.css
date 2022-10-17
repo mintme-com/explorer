@@ -155,15 +155,15 @@ li.ng-scope {
     overflow-y:scroll;
 }
 
-.tabbable-line>.nav-tabs{
+.tabbable-line > .nav-tabs{
     display: flow-root;
 }
-.tabbable-line>.nav-tabs>li{
+.tabbable-line > .nav-tabs>li{
     border-bottom: 4px solid white;
 }
 @media screen and (max-width: 375px) {
-	.tabbable-line>.nav-tabs>li>a{
+    .tabbable-line > .nav-tabs > li > a {
         padding-left: 7px;
         padding-right: 7px;
-	}
+    }
 }
