@@ -73,22 +73,20 @@ var grabBlock = function(config, web3, blockHashOrNumber) {
     }
 }
 var writeBlockToDB = function(config, blockData) {
-    return new Block(blockData).save( function( err, block, count ){
-        if ( typeof err !== 'undefined' && err ) {
-            if (err.code == 11000) {
-                console.log('Skip: Duplicate DB on #' + blockData.number.toString());
-            } else {
-               console.log('Error: Aborted due to error on ' +
-                    'block number ' + blockData.number.toString() + ': ' +
-                    err);
-               process.exit(9);
-           }
-        } else {
-            if(!('quiet' in config && config.quiet === true)) {
-                console.log('DB successfully written for block #' +
-                    blockData.number.toString() );
-            }
+    return new Block(blockData).save().then( function( block ){
+        if(!('quiet' in config && config.quiet === true)) {
+            console.log('DB successfully written for block #' +
+                blockData.number.toString() );
         }
+      }).catch( function( err ){
+        if (err.code == 11000) {
+            console.log('Skip: Duplicate DB on #' + blockData.number.toString());
+        } else {
+           console.log('Error: Aborted due to error on ' +
+                'block number ' + blockData.number.toString() + ': ' +
+                err);
+           process.exit(9);
+       }
       });
 }
 
@@ -98,7 +96,7 @@ var writeBlockToDB = function(config, blockData) {
   *     if record DNE: write a file for the block
   */
 var checkBlockDBExistsThenWrite = function(config, blockData) {
-    Block.find({number: blockData.number}, function (err, b) {
+    Block.find({number: blockData.number}).then(function (b) {
         if (!b.length) {
             writeBlockToDB(config, blockData);
             writeTransactionsToDB(config, blockData);
@@ -106,6 +104,11 @@ var checkBlockDBExistsThenWrite = function(config, blockData) {
             console.log('Block #' + blockData.number.toString() + ' already exists in DB.');
         }
 
+    }).catch(function (err) {
+        console.log('Error: Aborted due to error on ' +
+            'block number ' + blockData.number.toString() + ': ' +
+            err);
+        process.exit(9);
     })
 }
 
@@ -121,20 +124,20 @@ var writeTransactionsToDB = function(config, blockData) {
             var tx = normalizeTX(txData, blockData);
             bulkOps.push(tx);
         }
-        Transaction.collection.insert(bulkOps, function( err, tx ){
-            if ( typeof err !== 'undefined' && err ) {
-                if (err.code == 11000) {
-                    console.log('Skip: Duplicate transaction on #' + blockData.number.toString());
-                } else {
-                   console.log('Error: Aborted due to error: ' +
-                        err);
-                   process.exit(9);
-               }
-            } else if(!('quiet' in config && config.quiet === true)) {
+        Transaction.collection.insertMany(bulkOps).then(function( tx ){
+            if(!('quiet' in config && config.quiet === true)) {
                 console.log('DB successfully written for block ' +
                     blockData.transactions.length.toString() );
 
             }
+        }).catch(function( err ){
+            if (err.code == 11000) {
+                console.log('Skip: Duplicate transaction on #' + blockData.number.toString());
+            } else {
+               console.log('Error: Aborted due to error: ' +
+                    err);
+               process.exit(9);
+           }
         });
     }
 }
@@ -155,18 +158,22 @@ var blockIter = function(web3, firstBlock, lastBlock, config) {
         return;
     if (lastBlock - firstBlock === 1) {
         [lastBlock, firstBlock].forEach(function(blockNumber) {
-            Block.find({number: blockNumber}, function (err, b) {
+            Block.find({number: blockNumber}).then(function (b) {
                 if (!b.length)
                     grabBlock(config, web3, blockNumber);
+            }).catch(function (err) {
+                console.log("Error: " + err);
             });
         });
     } else if (lastBlock === firstBlock) {
-        Block.find({number: firstBlock}, function (err, b) {
+        Block.find({number: firstBlock}).then(function (b) {
             if (!b.length)
                 grabBlock(config, web3, firstBlock);
+        }).catch(function (err) {
+            console.log("Error: " + err);
         });
     } else {
-        Block.count({number: {$gte: firstBlock, $lte: lastBlock}}, function(err, c) {
+        Block.countDocuments({number: {$gte: firstBlock, $lte: lastBlock}}).then(function(c) {
           var expectedBlocks = lastBlock - firstBlock + 1;
           console.log(" - expectedBlocks = " + expectedBlocks + ", real counting = " + c);
           if (c === 0) {
@@ -178,6 +185,8 @@ var blockIter = function(web3, firstBlock, lastBlock, config) {
             blockIter(web3, midBlock + 1, lastBlock, config);
           } else
             return;
+        }).catch(function(err) {
+          console.log("Error: " + err);
         })
     }
 }

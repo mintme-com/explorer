@@ -169,18 +169,16 @@ var writeBlockToDB = function(config, blockData, flush) {
     self.bulkOps = [];
     if(bulk.length == 0) return;
 
-    Block.collection.insert(bulk, function( err, blocks ){
-      if ( typeof err !== 'undefined' && err ) {
-        if (err.code == 11000) {
-          if(!('quiet' in config && config.quiet === true)) {
-            console.log('Skip: Duplicate DB key : ' +err);
-          }
-        }else{
-          console.log('Error: Aborted due to error on DB: ' + err);
-          process.exit(9);
+    Block.collection.insertMany(bulk).then(function( blocks ){
+      console.log('* ' + blocks.insertedCount + ' blocks successfully written.');
+    }).catch(function( err ){
+      if (err.code == 11000) {
+        if(!('quiet' in config && config.quiet === true)) {
+          console.log('Skip: Duplicate DB key : ' +err);
         }
       }else{
-        console.log('* ' + blocks.insertedCount + ' blocks successfully written.');
+        console.log('Error: Aborted due to error on DB: ' + err);
+        process.exit(9);
       }
     });
   }
@@ -315,7 +313,10 @@ var writeTransactionsToDB = function(config, blockData, flush) {
                 }
                 n++;
                 // upsert account
-                Account.collection.update({ address: account }, { $set: data[account] }, { upsert: true });
+                Account.collection.updateOne({ address: account }, { $set: data[account] }, { upsert: true })
+                  .catch(function(err) {
+                    console.log('Error: Aborted due to error on Account: ' + err);
+                  });
               });
             });
             callback(null);
@@ -326,18 +327,16 @@ var writeTransactionsToDB = function(config, blockData, flush) {
     }
 
     if (bulk.length > 0)
-    Transaction.collection.insert(bulk, function( err, tx ){
-      if ( typeof err !== 'undefined' && err ) {
-        if (err.code == 11000) {
-          if(!('quiet' in config && config.quiet === true)) {
-            console.log('Skip: Duplicate transaction key ' + err);
-          }
-        }else{
-          console.log('Error: Aborted due to error on Transaction: ' + err);
-          process.exit(9);
+    Transaction.collection.insertMany(bulk).then(function( tx ){
+      console.log('* ' + tx.insertedCount + ' transactions successfully recorded.');
+    }).catch(function( err ){
+      if (err.code == 11000) {
+        if(!('quiet' in config && config.quiet === true)) {
+          console.log('Skip: Duplicate transaction key ' + err);
         }
       }else{
-        console.log('* ' + tx.insertedCount + ' transactions successfully recorded.');
+        console.log('Error: Aborted due to error on Transaction: ' + err);
+        process.exit(9);
       }
     });
   }
@@ -348,8 +347,8 @@ var writeTransactionsToDB = function(config, blockData, flush) {
 var prepareSync = function(config, callback) {
   var blockNumber = null;
   var oldBlockFind = Block.find({}, "number").lean(true).sort('number').limit(1);
-  oldBlockFind.exec(function (err, docs) {
-    if(err || !docs || docs.length < 1) {
+  oldBlockFind.then(function (docs) {
+    if(!docs || docs.length < 1) {
       // not found in db. sync from config.endBlock or 'latest'
       if(web3.isConnected()) {
         var currentBlock = web3.eth.blockNumber;
@@ -373,13 +372,16 @@ var prepareSync = function(config, callback) {
         }
       } else {
         console.log('Error: Web3 connection error');
-        callback(err, null);
+        callback('Web3 connection error', null);
       }
     }else{
       blockNumber = docs[0].number - 1;
       console.log('Old block found. Starting block number = ' + blockNumber);
       callback(null, blockNumber);
     }
+  }).catch(function (err) {
+    console.log('Error: Aborted due to error on DB: ' + err);
+    callback(err, null);
   });
 }
 /**
@@ -395,8 +397,8 @@ var runPatcher = function(config, startBlock, endBlock) {
   if(typeof startBlock === 'undefined' || typeof endBlock === 'undefined') {
     // get the last saved block
     var blockFind = Block.find({}, "number").lean(true).sort('-number').limit(1);
-    blockFind.exec(function (err, docs) {
-      if(err || !docs || docs.length < 1) {
+    blockFind.then(function (docs) {
+      if(!docs || docs.length < 1) {
         // no blocks found. terminate runPatcher()
         console.log('No need to patch blocks.');
         return;
@@ -405,6 +407,8 @@ var runPatcher = function(config, startBlock, endBlock) {
       var lastMissingBlock = docs[0].number + 1;
       var currentBlock = web3.eth.blockNumber;
       runPatcher(config, lastMissingBlock, currentBlock - 1);
+    }).catch(function (err) {
+      console.log('Error: Aborted due to error on DB: ' + err);
     });
     return;
   }
@@ -447,13 +451,15 @@ var runPatcher = function(config, startBlock, endBlock) {
   This will be used for the patcher(experimental)
 **/
 var checkBlockDBExistsThenWrite = function(config, patchData, flush) {
-  Block.find({number: patchData.number}, function (err, b) {
+  Block.find({number: patchData.number}).then(function (b) {
     if (!b.length){
       writeBlockToDB(config, patchData, flush);
       writeTransactionsToDB(config, patchData, flush);
     }else if(!('quiet' in config && config.quiet === true)) {
       console.log('Block number: ' +patchData.number.toString() + ' already exists in DB.');
     }
+  }).catch(function (err) {
+    console.log('Error: Aborted due to error on DB: ' + err);
   });
 };
 
@@ -478,15 +484,14 @@ const getQuote = async () => {
       quoteUSD: quoteUSD.market_data.current_price.usd,
     };
 
-    new Market(quoteObject).save((err, market, count) => {
-      if (typeof err !== 'undefined' && err) {
-        process.exit(9);
-      } else {
-        if (!('quiet' in config && config.quiet === true)) {
-          console.log('DB successfully written for market quote.');
-        }
-      }
-    });
+    try {
+      await new Market(quoteObject).save();
+    } catch (err) {
+      process.exit(9);
+    }
+    if (!('quiet' in config && config.quiet === true)) {
+      console.log('DB successfully written for market quote.');
+    }
   } catch (error) {
     if (!('quiet' in config && config.quiet === true)) {
       console.log(error);

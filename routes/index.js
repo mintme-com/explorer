@@ -3,7 +3,6 @@ const mongoose = require('mongoose');
 const Block = mongoose.model('Block');
 const Transaction = mongoose.model('Transaction');
 const Account = mongoose.model('Account');
-const async = require('async');
 const filters = require('./filters');
 
 module.exports = function (app) {
@@ -60,81 +59,87 @@ const getAddr = async (req, res) => {
     }
   }
 
-  addrFind.lean(true).sort(sortOrder).skip(start).limit(limit)
-    .exec('find', (err, docs) => {
-      if (docs) data.data = filters.filterTX(docs, addr);
-      else data.data = [];
-      res.write(JSON.stringify(data));
-      res.end();
-    });
-
+  try {
+    const docs = await addrFind.lean(true).sort(sortOrder).skip(start)
+      .limit(limit);
+    if (docs) data.data = filters.filterTX(docs, addr);
+    else data.data = [];
+  } catch (err) {
+    console.error(`AddrFind error: ${err}`);
+    data.data = [];
+  }
+  res.write(JSON.stringify(data));
+  res.end();
 };
-var getAddrCounter = function (req, res) {
+var getAddrCounter = async function (req, res) {
   const addr = req.body.addr.toLowerCase();
   const count = parseInt(req.body.count);
   const data = { recordsFiltered: count, recordsTotal: count, mined: 0 };
 
-  async.waterfall([
-    function (callback) {
+  try {
+    const txCount = await Transaction.countDocuments({ $or: [{ 'to': addr }, { 'from': addr }] });
+    if (txCount) {
+      // fix recordsTotal
+      data.recordsTotal = txCount;
+      data.recordsFiltered = txCount;
+    }
+  } catch (err) {
+    console.error(`AddrCounter error: ${err}`);
+  }
 
-      Transaction.count({ $or: [{ 'to': addr }, { 'from': addr }] }, (err, count) => {
-        if (!err && count) {
-          // fix recordsTotal
-          data.recordsTotal = count;
-          data.recordsFiltered = count;
-        }
-        callback(null);
-      });
+  try {
+    const minedCount = await Block.countDocuments({ 'miner': addr });
+    if (minedCount) {
+      data.mined = minedCount;
+    }
+  } catch (err) {
+    console.error(`AddrCounter error: ${err}`);
+  }
 
-    }, function (callback) {
-
-      Block.count({ 'miner': addr }, (err, count) => {
-        if (!err && count) {
-          data.mined = count;
-        }
-        callback(null);
-      });
-
-    }], (err) => {
-    res.write(JSON.stringify(data));
-    res.end();
-  });
-
+  res.write(JSON.stringify(data));
+  res.end();
 };
-var getBlock = function (req, res) {
+var getBlock = async function (req, res) {
   // TODO: support queries for block hash
   const txQuery = 'number';
   const number = parseInt(req.body.block);
 
-  const blockFind = Block.findOne({ number }).lean(true);
-  blockFind.exec((err, doc) => {
-    if (err || !doc) {
-      console.error(`BlockFind error: ${err}`);
+  try {
+    const doc = await Block.findOne({ number }).lean(true);
+    if (!doc) {
+      console.error(`BlockFind error: block ${number} not found`);
       console.error(req.body);
       res.write(JSON.stringify({ 'error': true }));
     } else {
       const block = filters.filterBlocks([doc]);
       res.write(JSON.stringify(block[0]));
     }
-    res.end();
-  });
+  } catch (err) {
+    console.error(`BlockFind error: ${err}`);
+    console.error(req.body);
+    res.write(JSON.stringify({ 'error': true }));
+  }
+  res.end();
 };
-var getTx = function (req, res) {
+var getTx = async function (req, res) {
   const tx = req.body.tx.toLowerCase();
-  const txFind = Block.findOne({ 'transactions.hash': tx }, 'transactions timestamp')
-    .lean(true);
-  txFind.exec((err, doc) => {
-    if (!doc) {
-      console.log(`missing: ${tx}`);
-      res.write(JSON.stringify({}));
-      res.end();
-    } else {
-      // filter transactions
-      const txDocs = filters.filterBlock(doc, 'hash', tx);
-      res.write(JSON.stringify(txDocs));
-      res.end();
-    }
-  });
+  let doc = null;
+  try {
+    doc = await Block.findOne({ 'transactions.hash': tx }, 'transactions timestamp')
+      .lean(true);
+  } catch (err) {
+    console.error(`TxFind error: ${err}`);
+  }
+  if (!doc) {
+    console.log(`missing: ${tx}`);
+    res.write(JSON.stringify({}));
+    res.end();
+  } else {
+    // filter transactions
+    const txDocs = filters.filterBlock(doc, 'hash', tx);
+    res.write(JSON.stringify(txDocs));
+    res.end();
+  }
 };
 /*
   Fetch data from DB
@@ -157,78 +162,94 @@ var getData = function (req, res) {
 /*
   Total supply API code
 */
-var getTotal = function (req, res) {
-  Account.aggregate([
-    { $group: { _id: null, totalSupply: { $sum: '$balance' } } },
-  ]).exec((err, docs) => {
-    if (err) {
-      res.write('Error getting total supply');
-      res.end();
-    }
+var getTotal = async function (req, res) {
+  try {
+    const docs = await Account.aggregate([
+      { $group: { _id: null, totalSupply: { $sum: '$balance' } } },
+    ]);
     res.write(docs[0].totalSupply.toString());
-    res.end();
-  });
+  } catch (err) {
+    console.error(`getTotal error: ${err}`);
+    res.write('Error getting total supply');
+  }
+  res.end();
 };
 
 /*
   temporary blockstats here
 */
-const latestBlock = function (req, res) {
-  const block = Block.findOne({}, 'totalDifficulty')
-    .lean(true).sort('-number');
-  block.exec((err, doc) => {
-    res.write(JSON.stringify(doc));
-    res.end();
-  });
+const latestBlock = async function (req, res) {
+  let doc = null;
+  try {
+    doc = await Block.findOne({}, 'totalDifficulty')
+      .lean(true).sort('-number');
+  } catch (err) {
+    console.error(`latestBlock error: ${err}`);
+  }
+  res.write(JSON.stringify(doc));
+  res.end();
 };
 
-const getLatest = function (lim, res, callback) {
-  const blockFind = Block.find({}, 'number transactions timestamp miner extraData')
-    .lean(true).sort('-number').limit(lim);
-  blockFind.exec((err, docs) => {
-    callback(docs, res);
-  });
+const getLatest = async function (lim, res, callback) {
+  let docs = null;
+  try {
+    docs = await Block.find({}, 'number transactions timestamp miner extraData')
+      .lean(true).sort('-number').limit(lim);
+  } catch (err) {
+    console.error(`getLatest error: ${err}`);
+  }
+  callback(docs, res);
 };
 
 /* get blocks from db */
-const sendBlocks = function (lim, res) {
-  const blockFind = Block.find({}, 'number timestamp miner extraData')
-    .lean(true).sort('-number').limit(lim);
-  blockFind.exec((err, docs) => {
-    if (!err && docs) {
-      const blockNumber = docs[docs.length - 1].number;
-      // aggregate transaction counters
-      Transaction.aggregate([
-        { $match: { blockNumber: { $gte: blockNumber } } },
-        { $group: { _id: '$blockNumber', count: { $sum: 1 } } },
-      ]).exec((err, results) => {
-        const txns = {};
-        if (!err && results) {
-          // set transaction counters
-          results.forEach((txn) => {
-            txns[txn._id] = txn.count;
-          });
-          docs.forEach((doc) => {
-            doc.txn = txns[doc.number] || 0;
-          });
-        }
-        res.write(JSON.stringify({ 'blocks': filters.filterBlocks(docs) }));
-        res.end();
-      });
-    } else {
-      console.log(`blockFind error:${err}`);
-      res.write(JSON.stringify({ 'error': true }));
-      res.end();
-    }
-  });
+const sendBlocks = async function (lim, res) {
+  let docs = null;
+  try {
+    docs = await Block.find({}, 'number timestamp miner extraData')
+      .lean(true).sort('-number').limit(lim);
+  } catch (err) {
+    console.log(`blockFind error:${err}`);
+  }
+  if (!docs || !docs.length) {
+    res.write(JSON.stringify({ 'error': true }));
+    res.end();
+    return;
+  }
+
+  const blockNumber = docs[docs.length - 1].number;
+  // aggregate transaction counters
+  let results = null;
+  try {
+    results = await Transaction.aggregate([
+      { $match: { blockNumber: { $gte: blockNumber } } },
+      { $group: { _id: '$blockNumber', count: { $sum: 1 } } },
+    ]);
+  } catch (err) {
+    console.log(`transaction aggregate error:${err}`);
+  }
+  const txns = {};
+  if (results) {
+    // set transaction counters
+    results.forEach((txn) => {
+      txns[txn._id] = txn.count;
+    });
+    docs.forEach((doc) => {
+      doc.txn = txns[doc.number] || 0;
+    });
+  }
+  res.write(JSON.stringify({ 'blocks': filters.filterBlocks(docs) }));
+  res.end();
 };
 
-const sendTxs = function (lim, res) {
-  Transaction.find({}).lean(true).sort('-blockNumber').limit(lim)
-    .exec((err, txs) => {
-      res.write(JSON.stringify({ 'txs': txs }));
-      res.end();
-    });
+const sendTxs = async function (lim, res) {
+  let txs = null;
+  try {
+    txs = await Transaction.find({}).lean(true).sort('-blockNumber').limit(lim);
+  } catch (err) {
+    console.error(`sendTxs error: ${err}`);
+  }
+  res.write(JSON.stringify({ 'txs': txs }));
+  res.end();
 };
 
 const MAX_ENTRIES = 10;

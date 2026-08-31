@@ -68,11 +68,7 @@ function makeRichList(toBlock, blocks, updateCallback) {
         { $match: { blockNumber: { $lte: toBlock, $gt: fromBlock } } },
         { $group: { _id: '$from' } },
         { $project: { '_id': 1 } },
-      ]).exec((err, docs) => {
-        if (err) {
-          console.log(err);
-          return;
-        }
+      ]).then((docs) => {
         docs.forEach((doc) => {
           // check address cache
           if (!self.cached[doc._id]) {
@@ -84,6 +80,8 @@ function makeRichList(toBlock, blocks, updateCallback) {
           }
         });
         callback(null);
+      }).catch((err) => {
+        console.log(err);
       });
     }, function (callback) {
       // dictint("to")
@@ -91,11 +89,7 @@ function makeRichList(toBlock, blocks, updateCallback) {
         { $match: { blockNumber: { $lte: toBlock, $gt: fromBlock } } },
         { $group: { _id: '$to' } },
         { $project: { '_id': 1 } },
-      ]).exec((err, docs) => {
-        if (err) {
-          console.log(err);
-          return;
-        }
+      ]).then((docs) => {
         docs.forEach((doc) => {
           // to == null case
           if (!doc._id) {
@@ -109,6 +103,8 @@ function makeRichList(toBlock, blocks, updateCallback) {
           }
         });
         callback(null);
+      }).catch((err) => {
+        console.log(err);
       });
     }, function (callback) {
       // aggregate miner's addresses
@@ -116,11 +112,7 @@ function makeRichList(toBlock, blocks, updateCallback) {
         { $match: { number: { $lte: toBlock, $gt: fromBlock } } },
         { $group: { _id: '$miner' } },
         { $project: { '_id': 1 } },
-      ]).exec((err, docs) => {
-        if (err) {
-          console.log(err);
-          return;
-        }
+      ]).then((docs) => {
         docs.forEach((doc) => {
           if (!self.cached[doc._id]) {
             self.accounts[doc._id] = { address: doc._id, type: 0 };
@@ -130,6 +122,8 @@ function makeRichList(toBlock, blocks, updateCallback) {
           }
         });
         callback(null);
+      }).catch((err) => {
+        console.log(err);
       });
     }, function (callback) {
       const len = Object.keys(self.accounts).length;
@@ -335,61 +329,60 @@ var bulkInsert = function (bulk) {
   } else {
     localbulk = bulk.splice(0, 300);
   }
-  Account.collection.insert(localbulk, (error, data) => {
-    if (error) {
-      if (error.code == 11000) {
-        // For already exists case, try upsert method.
-        asyncL.eachSeries(localbulk, (item, eachCallback) => {
-          // upsert accounts
-          item._id = undefined;
-          delete item._id; // remove _id field
-          if (item.type == 0) {
-            // do not update for normal address cases
-            item.type = undefined;
-            delete item.type;
-          }
-          Account.collection.update({ 'address': item.address }, { $set: item }, { upsert: true }, (err, updated) => {
-            if (err) {
-              if (!config.quiet) {
-                console.log(`WARN: Duplicate DB key : ${error}`);
-                console.log(`ERROR: Fail to update account: ${err}`);
-              }
-              return eachCallback(err);
-            }
+  Account.collection.insertMany(localbulk).then((data) => {
+    if (!('quiet' in config && config.quiet === true)) {
+      console.log(`* ${data.insertedCount} accounts successfully inserted.`);
+    }
+    if (bulk.length > 0) {
+      setTimeout(() => {
+        bulkInsert(bulk);
+      }, 200);
+    }
+  }).catch((error) => {
+    if (error.code == 11000) {
+      // For already exists case, try upsert method.
+      asyncL.eachSeries(localbulk, (item, eachCallback) => {
+        // upsert accounts
+        item._id = undefined;
+        delete item._id; // remove _id field
+        if (item.type == 0) {
+          // do not update for normal address cases
+          item.type = undefined;
+          delete item.type;
+        }
+        Account.collection.updateOne({ 'address': item.address }, { $set: item }, { upsert: true })
+          .then(() => {
             eachCallback();
-          });
-        }, (err) => {
-          if (err) {
-            if (err.code != 11000) {
-              console.log(`ERROR: Aborted due to error: ${JSON.stringify(err, null, 2)}`);
-              process.exit(9);
-              return;
+          })
+          .catch((err) => {
+            if (!config.quiet) {
+              console.log(`WARN: Duplicate DB key : ${error}`);
+              console.log(`ERROR: Fail to update account: ${err}`);
             }
-            console.log(`WARN: Fail to upsert (ignore) ${err}`);
+            eachCallback(err);
+          });
+      }, (err) => {
+        if (err) {
+          if (err.code != 11000) {
+            console.log(`ERROR: Aborted due to error: ${JSON.stringify(err, null, 2)}`);
+            process.exit(9);
+            return;
+          }
+          console.log(`WARN: Fail to upsert (ignore) ${err}`);
 
-          }
-          if (!('quiet' in config && config.quiet === true)) {
-            console.log(`* ${localbulk.length} accounts successfully updated.`);
-          }
-          if (bulk.length > 0) {
-            setTimeout(() => {
-              bulkInsert(bulk);
-            }, 200);
-          }
-        });
-      } else {
-        console.log(`Error: Aborted due to error on DB: ${error}`);
-        process.exit(9);
-      }
+        }
+        if (!('quiet' in config && config.quiet === true)) {
+          console.log(`* ${localbulk.length} accounts successfully updated.`);
+        }
+        if (bulk.length > 0) {
+          setTimeout(() => {
+            bulkInsert(bulk);
+          }, 200);
+        }
+      });
     } else {
-      if (!('quiet' in config && config.quiet === true)) {
-        console.log(`* ${data.insertedCount} accounts successfully inserted.`);
-      }
-      if (bulk.length > 0) {
-        setTimeout(() => {
-          bulkInsert(bulk);
-        }, 200);
-      }
+      console.log(`Error: Aborted due to error on DB: ${error}`);
+      process.exit(9);
     }
   });
 };

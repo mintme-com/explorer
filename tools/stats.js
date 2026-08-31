@@ -81,53 +81,57 @@ var getStats = function (web3, blockNumber, nextBlock, endNumber, interval, resc
   *     if record exists: abort
   *     if record DNE: write a file for the block
   */
-var checkBlockDBExistsThenWrite = function (web3, blockData, nextBlock, endNumber, interval, rescan) {
-  BlockStat.find({ number: blockData.number }, (err, b) => {
-    if (!b.length && nextBlock) {
-      // calc hashrate, txCount, blocktime, uncleCount
-      const stat = {
-        'number': blockData.number,
-        'timestamp': blockData.timestamp,
-        'difficulty': blockData.difficulty,
-        'txCount': blockData.transactions.length,
-        'gasUsed': blockData.gasUsed,
-        'gasLimit': blockData.gasLimit,
-        'miner': blockData.miner,
-        'blockTime': (nextBlock.timestamp - blockData.timestamp) / (nextBlock.number - blockData.number),
-        'uncleCount': blockData.uncles.length,
-      };
-      new BlockStat(stat).save((err, s, count) => {
-        if (!('quiet' in config && config.quiet === true)) {
-          console.log(s);
-        }
-        if (typeof err !== 'undefined' && err) {
-          console.log(`${'Error: Aborted due to error on ' + 'block number '}${blockData.number.toString()}: ${
-            err}`);
-          process.exit(9);
-        } else {
-          if (!('quiet' in config && config.quiet === true)) {
-            console.log(`DB successfully written for block number ${blockData.number.toString()}`);
-          }
-          getStats(web3, blockData.number - interval, blockData, endNumber, interval, rescan);
-        }
-      });
-    } else {
-      if (rescan || !nextBlock) {
-        getStats(web3, blockData.number - interval, blockData, endNumber, interval, rescan);
-        if (nextBlock) {
-          if (!('quiet' in config && config.quiet === true)) {
-            console.log(`WARN: block number: ${blockData.number.toString()} already exists in DB.`);
-          }
-        }
-      } else {
-        if (!('quiet' in config && config.quiet === true)) {
-          console.error(`Aborting because block number: ${blockData.number.toString()} already exists in DB.`);
-        }
-
+var checkBlockDBExistsThenWrite = async function (web3, blockData, nextBlock, endNumber, interval, rescan) {
+  let b;
+  try {
+    b = await BlockStat.find({ number: blockData.number });
+  } catch (err) {
+    console.log(`${'Error: Aborted due to error on ' + 'block number '}${blockData.number.toString()}: ${
+      err}`);
+    process.exit(9);
+  }
+  if (!b.length && nextBlock) {
+    // calc hashrate, txCount, blocktime, uncleCount
+    const stat = {
+      'number': blockData.number,
+      'timestamp': blockData.timestamp,
+      'difficulty': blockData.difficulty,
+      'txCount': blockData.transactions.length,
+      'gasUsed': blockData.gasUsed,
+      'gasLimit': blockData.gasLimit,
+      'miner': blockData.miner,
+      'blockTime': (nextBlock.timestamp - blockData.timestamp) / (nextBlock.number - blockData.number),
+      'uncleCount': blockData.uncles.length,
+    };
+    try {
+      const s = await new BlockStat(stat).save();
+      if (!('quiet' in config && config.quiet === true)) {
+        console.log(s);
       }
+    } catch (err) {
+      console.log(`${'Error: Aborted due to error on ' + 'block number '}${blockData.number.toString()}: ${
+        err}`);
+      process.exit(9);
     }
+    if (!('quiet' in config && config.quiet === true)) {
+      console.log(`DB successfully written for block number ${blockData.number.toString()}`);
+    }
+    getStats(web3, blockData.number - interval, blockData, endNumber, interval, rescan);
+  } else {
+    if (rescan || !nextBlock) {
+      getStats(web3, blockData.number - interval, blockData, endNumber, interval, rescan);
+      if (nextBlock) {
+        if (!('quiet' in config && config.quiet === true)) {
+          console.log(`WARN: block number: ${blockData.number.toString()} already exists in DB.`);
+        }
+      }
+    } else {
+      if (!('quiet' in config && config.quiet === true)) {
+        console.error(`Aborting because block number: ${blockData.number.toString()} already exists in DB.`);
+      }
 
-  });
+    }
+  }
 };
 
 const minutes = 1;

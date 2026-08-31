@@ -50,20 +50,25 @@ module.exports = function(req, res){
   async.waterfall([
     function(callback) {
       // get the creation transaction.
-      Transaction.findOne({creates: contractAddress}).lean(true).exec(function(err, doc) {
-        if (err || !doc) {
-          // no transaction found.
+      Transaction.findOne({creates: contractAddress}).lean(true)
+        .then(function(doc) {
+          if (!doc) {
+            // no transaction found.
+            callback({error: "true", message: "no transaction found"}, null);
+            return;
+          }
+          callback(null, doc);
+        })
+        .catch(function(err) {
+          console.error("Transaction lookup error: " + err);
           callback({error: "true", message: "no transaction found"}, null);
-          return;
-        }
-        callback(null, doc);
-      });
+        });
     },
     function(transaction, callback) {
       Contract.findOne({address: contractAddress}).lean(true)
-        .exec(function(err, doc) {
+        .then(function(doc) {
           var contract;
-          if (err || !doc) {
+          if (!doc) {
             console.log('Contract not found. use default abi.');
             contract = eth.contract(ABI);
           } else {
@@ -74,6 +79,12 @@ module.exports = function(req, res){
               contract = eth.contract(ABI);
             }
           }
+          var token = contract.at(contractAddress);
+          callback(null, transaction, contract, token);
+        })
+        .catch(function(err) {
+          console.log('Contract lookup error. use default abi. ' + err);
+          var contract = eth.contract(ABI);
           var token = contract.at(contractAddress);
           callback(null, transaction, contract, token);
         });
