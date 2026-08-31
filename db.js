@@ -103,8 +103,9 @@ module.exports.Account = mongoose.model('Account');
 module.exports.Market = mongoose.model('Market');
 
 mongoose.Promise = global.Promise;
-mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost/blockDB', {
-  useMongoClient: true,
-});
+// keep pre-6.x behaviour: don't strip query conditions on paths that are not
+// in the schema (e.g. Block.findOne({'transactions.hash': ...}))
+mongoose.set('strictQuery', false);
+mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost/blockDB');
 
 // mongoose.set('debug', true);

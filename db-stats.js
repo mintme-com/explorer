@@ -18,5 +18,6 @@ var BlockStat = new Schema(
 mongoose.model('BlockStat', BlockStat);
 module.exports.BlockStat = mongoose.model('BlockStat');
 
+mongoose.set('strictQuery', false);
 mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost/blockDB');
 mongoose.set('debug', true);

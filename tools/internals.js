@@ -129,6 +129,7 @@ var getLatestBlocks = function(latest, start) {
 }
 
 
+mongoose.set('strictQuery', false);
 mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost/blockDB');
 mongoose.set('debug', true);
 
