@@ -171,13 +171,17 @@ exports.data = async function(req, res){
           }
         }
         Contract.findOne({address: tx.to}).lean(true)
-          .exec(function(err, contractDb) {
-            if (err || !contractDb) {
+          .then(function(contractDb) {
+            if (!contractDb) {
               console.log('Contract not found. tx.to = ', tx.to);
               callback(null, tx, traces, null, null);
               return;
             }
             callback(null, tx, traces, contractDb, null);
+          })
+          .catch(function(err) {
+            console.log('Contract lookup error. tx.to = ', tx.to, err);
+            callback(null, tx, traces, null, null);
           });
       } else {
         // creation contract case
@@ -292,15 +296,20 @@ exports.data = async function(req, res){
     async.waterfall([
       function(callback) {
         // get the creation transaction.
-        Transaction.findOne({creates: addr}).lean(true).exec(function(err, doc) {
-          if (err || !doc) {
-            // no creation transaction found
-            // this is normal address
+        Transaction.findOne({creates: addr}).lean(true)
+          .then(function(doc) {
+            if (!doc) {
+              // no creation transaction found
+              // this is normal address
+              callback(null, null);
+              return;
+            }
+            callback(null, doc);
+          })
+          .catch(function(err) {
+            console.error("Transaction lookup error: " + err);
             callback(null, null);
-            return;
-          }
-          callback(null, doc);
-        });
+          });
       },
       function(transaction, callback) {
         // detect Token contract

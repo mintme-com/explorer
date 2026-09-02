@@ -13,7 +13,7 @@ var Transaction     = mongoose.model( 'Transaction' );
 var getTx = function() {
   mongoose.connection.on("open", function(err,conn) { 
 
-    Block.find({}, "transactions timestamp").lean(true).exec(function(err, docs) {
+    Block.find({}, "transactions timestamp").lean(true).then(function(docs) {
         async.forEach(docs, function(doc, cb) {
             var bulkOps = [];
           if (doc.transactions.length > 0) {
@@ -22,21 +22,20 @@ var getTx = function() {
                 txData.timestamp = doc.timestamp;
                 bulkOps.push(txData);
             }
-              Transaction.collection.insert(bulkOps, function( err, tx ){
-                if ( typeof err !== 'undefined' && err ) {
-                    if (err.code == 11000) {
-                        console.log('Skip: Duplicate key ' + 
-                        err);
-                    } else {
-                       console.log('Error: Aborted due to error: ' + 
-                            err);
-                       process.exit(9);
-                   }
+              Transaction.collection.insertMany(bulkOps).then(function( tx ){
+                console.log('DB successfully written for block ' +
+                    tx.insertedCount.toString() );
+                bulkOps = [];
+                cb();
+              }).catch(function( err ){
+                if (err.code == 11000) {
+                    console.log('Skip: Duplicate key ' + 
+                    err);
                 } else {
-                    console.log('DB successfully written for block ' +
-                        tx.length.toString() );
-                    
-                }
+                   console.log('Error: Aborted due to error: ' + 
+                        err);
+                   process.exit(9);
+               }
                 bulkOps = [];
                 cb();
               });

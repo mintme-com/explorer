@@ -129,6 +129,7 @@ var getLatestBlocks = function(latest, start) {
 }
 
 
+mongoose.set('strictQuery', false);
 mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost/blockDB');
 mongoose.set('debug', true);
 
@@ -138,10 +139,13 @@ setInterval(function() {
   // get latest 
   try {
       InternalTx.findOne({}, "blockNumber").lean(true).sort("-blockNumber")
-          .exec(function(err, doc) {
+          .then(function(doc) {
             var last = doc.blockNumber;
             var latest = web3.eth.blockNumber;
             getLatestBlocks(latest, last);
+          })
+          .catch(function(err) {
+            console.error(err);
           });
   } catch (e) {
     console.error(e);

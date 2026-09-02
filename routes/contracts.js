@@ -7,30 +7,32 @@ const mongoose = require('mongoose');
 
 const Contract = mongoose.model('Contract');
 
-exports.addContract = function (contract) {
-  Contract.update(
-    { address: contract.address },
-    { $setOnInsert: contract },
-    { upsert: true },
-    (err, data) => {
-      console.log(data);
-    },
-  );
+exports.addContract = async function (contract) {
+  try {
+    const data = await Contract.updateOne(
+      { address: contract.address },
+      { $setOnInsert: contract },
+      { upsert: true },
+    );
+    console.log(data);
+  } catch (err) {
+    console.error(`AddContract error: ${err}`);
+  }
 };
 
-exports.findContract = function (address, res) {
-  const contractFind = Contract.findOne({ address }).lean(true);
-  contractFind.exec((err, doc) => {
-    if (err) {
-      console.error(`ContractFind error: ${err}`);
-      console.error(`bad address: ${address}`);
-      res.write(JSON.stringify({ 'error': true, 'valid': false }));
-    } else if (!doc || !doc.sourceCode) {
+exports.findContract = async function (address, res) {
+  try {
+    const doc = await Contract.findOne({ address }).lean(true);
+    if (!doc || !doc.sourceCode) {
       res.write(JSON.stringify({ 'valid': false }));
     } else {
       const data = doc;
       res.write(JSON.stringify(data));
     }
-    res.end();
-  });
+  } catch (err) {
+    console.error(`ContractFind error: ${err}`);
+    console.error(`bad address: ${address}`);
+    res.write(JSON.stringify({ 'error': true, 'valid': false }));
+  }
+  res.end();
 };

@@ -103,8 +103,10 @@ module.exports.Account = mongoose.model('Account');
 module.exports.Market = mongoose.model('Market');
 
 mongoose.Promise = global.Promise;
-mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost/blockDB', {
-  useMongoClient: true,
-});
+// blocks are written through the raw driver, so the schema has no
+// `transactions` path: queries such as Block.findOne({'transactions.hash': ...})
+// only work while query conditions outside the schema are kept
+mongoose.set('strictQuery', false);
+mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost/blockDB');
 
 // mongoose.set('debug', true);
