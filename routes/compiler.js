@@ -19,8 +19,7 @@ function formatVerifiedContracts(compiledSols) {
  * TODO: add custom errors type suport
  */
 async function validateSolc(req, res) {
-  const validator = new SolValidator(req.body)
-    .addSource(`${req.body.name}.sol`, req.body.code);
+  let validator;
 
   const data = {
     address: req.body.address,
@@ -31,16 +30,24 @@ async function validateSolc(req, res) {
   };
 
   try {
+    validator = new SolValidator(req.body);
+    if (req.body.inputFormat === 'standard-json') {
+      validator.addStandardJson(req.body.code);
+    } else {
+      validator.addSource(`${req.body.name}.sol`, req.body.code);
+    }
+    data.optimization = Boolean(validator.solSettings.optimizer && validator.solSettings.optimizer.enabled);
     await validator.validate();
     data.valid = true;
     data.abi = JSON.stringify(validator.contractSolc.abi);
     data.byteCode = validator.contractBytecode;
-    Contract.addContract(data);
+    await Contract.addContract(data);
   } catch (e) {
-    console.log('[solc]: ', { input: validator.solcInput, output: validator.compiledSols, comparedBytecode: validator.compareBytecode });
+    console.error('[solc]: ', e.message);
     data.valid = false;
+    data.error = e.message;
   } finally {
-    if (validator.compiledSols && validator.compiledSols.contracts) {
+    if (validator && validator.compiledSols && validator.compiledSols.contracts) {
       data.verifiedContracts = formatVerifiedContracts(validator.compiledSols);
     }
     res.write(JSON.stringify(data));

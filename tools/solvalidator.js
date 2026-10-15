@@ -1,13 +1,7 @@
-
 const solc = require('solc');
 const { eth } = require('../routes/web3relay');
 
 class SolValidator {
-  static checkSolcSnapshot(err, solcSnapshot) {
-    if (err) throw new Error(err);
-    return solcSnapshot;
-  }
-
   constructor(configs) {
     this.contractAddress = configs.address;
     this.contractName = configs.name;
@@ -17,38 +11,45 @@ class SolValidator {
     this.solVersion = configs.version;
     this.solSources = configs.sources || {};
     this.solSettings = configs.settings || {
-      outputSelection: {
-        '*': {
-          '*': ['*'],
-        },
-      },
+      outputSelection: { '*': { '*': ['*'] } },
     };
     this.solOptimizer = configs.optimization;
     this.compiledSols = null;
+    this.standardJson = false;
   }
 
-  /**
-   * @property {bool} define if solc compiler use obtimizer
-   */
   set solOptimizer(active) {
-    if (active) {
-      this.addSetting('optimizer', {
-        enabled: true,
-        runs: 200,
-      });
-    };
+    if (active) this.addSetting('optimizer', { enabled: true, runs: 200 });
   }
 
   get solcInput() {
-    return {
-      language: 'Solidity',
-      sources: this.solSources,
-      settings: this.solSettings,
-    };
+    return { language: 'Solidity', sources: this.solSources, settings: this.solSettings };
   }
 
   addSource(name, content) {
     this.solSources[name] = { content };
+    return this;
+  }
+
+  addStandardJson(code) {
+    const input = JSON.parse(code);
+    if (!input || input.language !== 'Solidity' || !input.sources ||
+        Array.isArray(input.sources) || typeof input.sources !== 'object' ||
+        Object.keys(input.sources).length === 0 ||
+        Object.values(input.sources).some(source => !source || typeof source.content !== 'string')) {
+      throw new Error('Provide Solidity Standard JSON with all source files included as content.');
+    }
+    if (input.settings !== undefined &&
+        (!input.settings || Array.isArray(input.settings) || typeof input.settings !== 'object')) {
+      throw new Error('Standard JSON settings must be an object.');
+    }
+    this.standardJson = true;
+    this.solSources = input.sources;
+    this.solSettings = input.settings || {};
+    // Output selection does not affect bytecode or metadata. Verification needs both bytecode forms.
+    this.solSettings.outputSelection = {
+      '*': { '*': ['abi', 'evm.bytecode.object', 'evm.deployedBytecode.object'] },
+    };
     return this;
   }
 
@@ -57,69 +58,58 @@ class SolValidator {
     return this;
   }
 
-  /**
-   * TODO: handle eth errors;
-   */
-
-  setByteCode() {
-    return new Promise(async (resolve) => {
-      this.contractBytecode = await eth.getCode(this.contractAddress);
-      if (this.contractBytecode.substring(0, 2) === '0x') this.contractBytecode = this.contractBytecode.substring(2);
-      resolve();
-    });
+  async setByteCode() {
+    this.contractBytecode = (await eth.getCode(this.contractAddress)).replace(/^0x/, '');
   }
 
   async validate() {
-    try {
-      await this.setByteCode();
-      await this.compileSources();
-      this.validateSolcOutput();
-      this.compareSources();
-      return this;
-    } catch (e) {
-      throw e;
-    }
+    await this.setByteCode();
+    await this.compileSources();
+    this.validateSolcOutput();
+    this.compareSources();
+    return this;
   }
 
-  async getSolcSnapshot(version = this.solVersion) {
-    return new Promise((resolve) => {
-      solc.loadRemoteVersion(version, (err, solcSnapshot) => resolve(this.constructor.checkSolcSnapshot(err, solcSnapshot)));
+  getSolcSnapshot(version = this.solVersion) {
+    return new Promise((resolve, reject) => {
+      solc.loadRemoteVersion(version, (err, snapshot) => {
+        if (err) reject(err);
+        else resolve(snapshot);
+      });
     });
   }
 
   async compileSources(solcSnapshot = solc) {
-    let loadSolc = solcSnapshot;
-    if (this.solcVersion !== solcSnapshot.version()) {
-      loadSolc = await this.getSolcSnapshot();
+    let compiler = solcSnapshot;
+    const localVersion = compiler.version().split('.Emscripten')[0];
+    if (this.solVersion !== 'latest' && this.solVersion.replace(/^v/, '') !== localVersion) {
+      compiler = await this.getSolcSnapshot();
     }
-    this.compiledSols = JSON.parse(loadSolc.compile(JSON.stringify(this.solcInput)));
+    this.compiledSols = JSON.parse(compiler.compile(JSON.stringify(this.solcInput)));
   }
 
   validateSolcOutput() {
-    if (!this.compiledSols.contracts) {
-      throw new Error('the sol file could not be compiled.');
-    } else if (!this.compiledSols.contracts[this.contracSource][this.contractName]) {
-      throw new Error('the name of the contract is not present in the sol file.');
-    } else {
-      this.contractSolc = this.compiledSols.contracts[this.contracSource][this.contractName];
+    const errors = (this.compiledSols.errors || []).filter(error => error.severity === 'error');
+    if (errors.length) throw new Error(errors.map(error => error.formattedMessage).join('\n'));
+    const contracts = this.compiledSols.contracts || {};
+    const matches = this.standardJson ?
+      Object.values(contracts).filter(source => source[this.contractName]) :
+      [contracts[this.contracSource]].filter(source => source && source[this.contractName]);
+    if (matches.length !== 1) {
+      throw new Error('The contract name must identify exactly one compiled contract.');
     }
+    this.contractSolc = matches[0][this.contractName];
   }
 
   compareSources() {
-    if (this.contractBytecode === '') {
-      throw new Error('contract dont exist in address');
-    }
-    const bytecodeClean = this.contractBytecode.replace(/a165627a7a72305820.{64}0029$/gi, '');
-    const contractBytecode = this.contractSolc.evm.bytecode.object;
-    let contractBytecodeClean = contractBytecode.replace(/a165627a7a72305820.{64}0029$/gi, '');
-    const constructorArgs = contractBytecodeClean.replace(bytecodeClean, '');
-    contractBytecodeClean = contractBytecodeClean.replace(constructorArgs, '');
-
-    this.compareBytecode = { addr: bytecodeClean, cont: contractBytecodeClean };
-    if (contractBytecodeClean !== bytecodeClean) {
-      throw new Error('contract validation failed');
-    }
+    if (!this.contractBytecode) throw new Error('No contract exists at this address.');
+    // Retain support for legacy Solidity Swarm metadata; compare the actual runtime, not creation code.
+    const clean = bytecode => bytecode.replace(/a165627a7a72305820[0-9a-f]{64}0029$/i, '').toLowerCase();
+    const deployed = clean(this.contractBytecode);
+    const compiled = clean(this.contractSolc.evm.deployedBytecode.object);
+    this.compareBytecode = { addr: deployed, cont: compiled };
+    if (!compiled || compiled !== deployed) throw new Error('Contract runtime bytecode does not match.');
   }
-};
+}
 
 exports.SolValidator = SolValidator;

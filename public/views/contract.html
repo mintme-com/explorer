@@ -17,7 +17,7 @@
         <h4>Verify and Publish Contract Source Code </h4>
         <div class="note">
           Enter Contract Source Code below.<br>
-          If the compiled bytecode matches the <b>Creation Address</b> bytecode, the contract is then <b>Verified</b> and will be published online.<br>
+          If the compiled bytecode matches the <b>deployed runtime</b> bytecode, the contract is then <b>Verified</b> and will be published online.<br>
         </div>
         <hr style="margin-top: 15px; margin-bottom: 0px">
         <form name="form.contract">
@@ -49,11 +49,17 @@
             </div>
             <div class="form-group col-sm-2">
               <span class="help-block"><b>Optimization Enabled </b>
-              <input type="checkbox" class="form-control" ng-model="contract.optimization"></span>
+              <input type="checkbox" class="form-control" ng-model="contract.optimization" ng-disabled="contract.inputFormat === 'standard-json'"></span>
             </div>
           </div>
           <div class="row">
             <div class="form-group col-sm-12">
+              <label for="inputFormat">Source format</label>
+              <select id="inputFormat" class="form-control" ng-model="contract.inputFormat">
+                <option value="solidity">Solidity source (single file)</option>
+                <option value="standard-json">Solidity Standard JSON</option>
+              </select>
+              <p ng-show="contract.inputFormat === 'standard-json'">Paste the complete Standard JSON input, including all source files. Its compiler settings are used instead of the optimization checkbox.</p>
               <span class="help-block"><b>Contract Code: </b></span>
               <span class="help-block font-red-mint">{{errors.code}}</span>
               <textarea class="form-control code" rows="8" ng-model="contract.code"></textarea>
@@ -63,7 +69,7 @@
             <div class="form-group col-sm-12">
               <span class="help-block"><b>Constructor Arguments ABI-encoded (OPTIONAL - Required for certain contracts only):</b></span>
               <span class="help-block font-red-mint">{{errors.abi}}</span>
-              <textarea class="form-control code" data-toggle="tooltip" data-placement="top" data-original-title="This option ONLY applies to contracts that accept constructor arguments, if you are unsure you most likely dont need this.<br><br>The constructor arguments should be in ABI-ENCODED values and will be appended to the contract bytecode." ng-model="contract.abi"></textarea>
+              <textarea class="form-control code" data-toggle="tooltip" data-placement="top" data-original-title="This explorer verifies deployed runtime bytecode. Constructor arguments are not required for MintMe v2 ERC20Token verification." ng-model="contract.abi"></textarea>
             </div>
           </div>
           <div class="row">
@@ -88,8 +94,9 @@
             <h4>Unable to Verify Code</h4>
             <p>
               <!--<i class="fa fa-check-circle-o"></i> Note: Contract was created by transaction <a href="/tx/{{contract.txHash}}">{{contract.txHash}}</a><br>-->
-              <i class="fa fa-times-circle-o font-red-mint"></i> The compiled result does not match the input creation bytecode located at <a href="addr/{{contract.address}}">{{contract.address}}</a>.
+              <i class="fa fa-times-circle-o font-red-mint"></i> The source could not be verified against the deployed runtime bytecode at <a href="addr/{{contract.address}}">{{contract.address}}</a>.
             </p>
+            <pre ng-if="contract.error">{{contract.error}}</pre>
           </div>
         </div>
         <hr>
