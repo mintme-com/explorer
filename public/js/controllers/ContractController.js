@@ -4,7 +4,7 @@ angular.module('BlocksApp').controller('ContractController', function($statePara
     //fetch compiler options
     $scope.compilerVersions = [];
 
-    $http.get('https://ethereum.github.io/solc-bin/bin/list.json').then(function (resp) {
+    $http.get('https://binaries.soliditylang.org/bin/list.json').then(function (resp) {
       function buildVersion (build) {
         if (build.prerelease && build.prerelease.length > 0) {
           return build.version + '-' + build.prerelease
@@ -25,7 +25,7 @@ angular.module('BlocksApp').controller('ContractController', function($statePara
     })
 
     $scope.form = {};
-    $scope.contract = {"address": $stateParams.addr, "optimization": true};
+    $scope.contract = {"address": $stateParams.addr, "optimization": true, "inputFormat": "solidity"};
     $scope.errors = {};
     $scope.settings = $rootScope.setup;
     
@@ -45,7 +45,7 @@ angular.module('BlocksApp').controller('ContractController', function($statePara
       if (typeof $scope.contract.code == "undefined")
         $scope.errors.code = "Invalid Contract Code"
 
-      if (Object.keys($scope.errors) < 1) {
+      if (Object.keys($scope.errors).length < 1) {
         var contractReq = $scope.contract;
         contractReq.action = "compile";
 
@@ -59,6 +59,9 @@ angular.module('BlocksApp').controller('ContractController', function($statePara
           console.log(resp.data);
           $scope.contract = resp.data;
           $scope.contract.compiled = true;
+        }).catch(function () {
+          $("#submitCodeBtn").button("reset");
+          $scope.errors.code = "Verification request failed. Please try again.";
         });
       } else {
         $("#submitCodeBtn").button("reset");
@@ -69,14 +72,14 @@ angular.module('BlocksApp').controller('ContractController', function($statePara
     $scope.resetCode = function() {
       $scope.form.contract.$setPristine();
       $scope.form.contract.$setUntouched();
-      $scope.contract = {"address": $stateParams.addr, "optimization": true};
+      $scope.contract = {"address": $stateParams.addr, "optimization": true, "inputFormat": "solidity"};
       $scope.errors = {};
     }
     $scope.startOver = function() {
       $scope.contract.compiled = false;
       $scope.form.contract.$setPristine();
       $scope.form.contract.$setUntouched();
-      $scope.contract = {"address": $stateParams.addr, "optimization": true};
+      $scope.contract = {"address": $stateParams.addr, "optimization": true, "inputFormat": "solidity"};
       $scope.errors = {};
     }
 
