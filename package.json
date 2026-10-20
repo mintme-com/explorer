@@ -13,7 +13,8 @@
     "rich": "node tools/richlist.js",
     "test": "mocha --exit",
     "lint:check": "concurrently \"eslint *.js ./lib/*.js ./test/*.js ./test/units/*.js ./routes/*.js ./tools/*.js \" \"html-linter --config html-linter.json\" ",
-    "lint:fix": "eslint *.js ./lib/*.js ./test/*.js ./test/units/*.js ./routes/*.js ./tools/*.js --fix"
+    "lint:fix": "eslint *.js ./lib/*.js ./test/*.js ./test/units/*.js ./routes/*.js ./tools/*.js --fix",
+    "test:contracts": "mocha test/units/solvalidator.js test/units/contract-controller.js --exit"
   },
   "dependencies": {
     "abi-decoder": "^1.1.0",
@@ -39,6 +40,8 @@
     "eslint-plugin-import": "^2.16.0",
     "html-linter": "^1.1.1",
     "mocha": "^6.0.2",
-    "request": "^2.88.0"
+    "request": "^2.88.0",
+    "solc-legacy": "npm:solc@0.4.18",
+    "solc-v2": "npm:solc@0.8.28"
   }
 }
